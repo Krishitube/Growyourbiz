@@ -2,7 +2,6 @@
 namespace ElementorPro\Modules\AssetsManager\AssetTypes;
 
 use Elementor\Core\Common\Modules\Ajax\Module as Ajax;
-use ElementorPro\Plugin;
 use ElementorPro\Modules\AssetsManager\Classes;
 use Elementor\Settings;
 
@@ -64,19 +63,19 @@ class Fonts_Manager {
 	 */
 	public function register_post_type_and_tax() {
 		$labels = [
-			'name' => _x( 'Custom Fonts', 'Elementor Font', 'elementor-pro' ),
-			'singular_name' => _x( 'Font', 'Elementor Font', 'elementor-pro' ),
-			'add_new' => _x( 'Add New', 'Elementor Font', 'elementor-pro' ),
-			'add_new_item' => _x( 'Add New Font', 'Elementor Font', 'elementor-pro' ),
-			'edit_item' => _x( 'Edit Font', 'Elementor Font', 'elementor-pro' ),
-			'new_item' => _x( 'New Font', 'Elementor Font', 'elementor-pro' ),
-			'all_items' => _x( 'All Fonts', 'Elementor Font', 'elementor-pro' ),
-			'view_item' => _x( 'View Font', 'Elementor Font', 'elementor-pro' ),
-			'search_items' => _x( 'Search Font', 'Elementor Font', 'elementor-pro' ),
-			'not_found' => _x( 'No Fonts found', 'Elementor Font', 'elementor-pro' ),
-			'not_found_in_trash' => _x( 'No Font found in Trash', 'Elementor Font', 'elementor-pro' ),
+			'name' => _x( 'Custom Fonts', 'CPT Name', 'elementor-pro' ),
+			'singular_name' => _x( 'Font', 'CPT Singular Name', 'elementor-pro' ),
+			'add_new' => __( 'Add New', 'elementor-pro' ),
+			'add_new_item' => __( 'Add New Font', 'elementor-pro' ),
+			'edit_item' => __( 'Edit Font', 'elementor-pro' ),
+			'new_item' => __( 'New Font', 'elementor-pro' ),
+			'all_items' => __( 'All Fonts', 'elementor-pro' ),
+			'view_item' => __( 'View Font', 'elementor-pro' ),
+			'search_items' => __( 'Search Font', 'elementor-pro' ),
+			'not_found' => __( 'No fonts found', 'elementor-pro' ),
+			'not_found_in_trash' => __( 'No fonts found in trash', 'elementor-pro' ),
 			'parent_item_colon' => '',
-			'menu_name' => _x( 'Custom Fonts', 'Elementor Font', 'elementor-pro' ),
+			'menu_name' => _x( 'Custom Fonts', 'CPT Menu Name', 'elementor-pro' ),
 		];
 
 		$args = [
@@ -363,7 +362,6 @@ class Fonts_Manager {
 	 * @return array
 	 */
 	private function generate_fonts_list() {
-
 		$fonts = new \WP_Query( [
 			'post_type' => self::CPT,
 			'posts_per_page' => -1,
@@ -493,6 +491,7 @@ class Fonts_Manager {
 	public function add_finder_item( array $categories ) {
 		$categories['settings']['items']['custom-fonts'] = [
 			'title' => __( 'Custom Fonts', 'elementor-pro' ),
+			'icon' => 'typography',
 			'url' => admin_url( 'edit.php?post_type=' . self::CPT ),
 			'keywords' => [ 'custom', 'fonts', 'elementor' ],
 		];
@@ -520,8 +519,8 @@ class Fonts_Manager {
 		add_filter( 'elementor/fonts/groups', [ $this, 'register_fonts_groups' ] );
 		add_filter( 'elementor/fonts/additional_fonts', [ $this, 'register_fonts_in_control' ] );
 		add_filter( 'elementor/finder/categories', [ $this, 'add_finder_item' ] );
-		add_action( 'elementor/post-css-file/parse', [ $this, 'enqueue_fonts' ] );
-		add_action( 'elementor/global-css-file/parse', [ $this, 'enqueue_fonts' ] );
+		add_action( 'elementor/css-file/post/parse', [ $this, 'enqueue_fonts' ] );
+		add_action( 'elementor/css-file/global/parse', [ $this, 'enqueue_fonts' ] );
 		add_filter( 'post_updated_messages', [ $this, 'post_updated_messages' ] );
 		add_filter( 'enter_title_here', [ $this, 'update_enter_title_here' ], 10, 2 );
 

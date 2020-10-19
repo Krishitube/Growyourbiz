@@ -2,10 +2,11 @@
 namespace ElementorPro\Modules\ThemeBuilder\Classes;
 
 use Elementor\Core\Files\CSS\Post as Post_CSS;
-use ElementorPro\Classes\Utils;
+use ElementorPro\Core\Utils;
 use ElementorPro\Modules\ThemeBuilder\Documents\Theme_Document;
 use ElementorPro\Modules\ThemeBuilder\Module;
 use ElementorPro\Plugin;
+use Elementor\Modules\PageTemplates\Module as PageTemplatesModule;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -17,6 +18,7 @@ class Locations_Manager {
 	protected $locations = [];
 	protected $did_locations = [];
 	protected $current_location;
+	protected $current_page_template = '';
 	protected $locations_queue = [];
 	protected $locations_printed = [];
 	protected $locations_skipped = [];
@@ -62,6 +64,10 @@ class Locations_Manager {
 			return;
 		}
 
+		if ( ! empty( $this->current_page_template ) ) {
+			$locations = $this->filter_page_template_locations( $locations );
+		}
+
 		$current_post_id = get_the_ID();
 
 		/** @var Post_CSS[] $css_files */
@@ -100,7 +106,7 @@ class Locations_Manager {
 						'template' => $template,
 						'description' => 'Template File: WP Page Template',
 					] );
-
+					$this->current_page_template = $wp_page_template;
 					return $template;
 				}
 			}
@@ -418,14 +424,6 @@ class Locations_Manager {
 		$this->register_location( $location, $args );
 	}
 
-	public function get_locations_without_core() {
-		_deprecated_function( __FUNCTION__, '2.4.0', 'Use get_locations( [ \'public\'=> true ] )' );
-
-		return $this->get_locations( [
-			'public' => true,
-		] );
-	}
-
 	public function location_exits( $location = '', $check_match = false ) {
 		$location_exits = ! ! $this->get_location( $location );
 
@@ -496,7 +494,7 @@ class Locations_Manager {
 		}
 
 		if ( ! empty( $args['document'] ) ) {
-			$title[] = $args['document']->get_post()->post_title;
+			$title[] = esc_html( $args['document']->get_post()->post_title );
 			$url = $args['document']->get_edit_url();
 		}
 
@@ -507,5 +505,30 @@ class Locations_Manager {
 		$title = implode( ' > ', $title );
 
 		Plugin::elementor()->inspector->add_log( 'Theme', $title, $url );
+	}
+
+	private function filter_page_template_locations( array $locations ) {
+		$templates_to_filter = [
+			PageTemplatesModule::TEMPLATE_CANVAS,
+			PageTemplatesModule::TEMPLATE_HEADER_FOOTER,
+		];
+
+		if ( ! in_array( $this->current_page_template, $templates_to_filter, true ) ) {
+			return $locations;
+		}
+
+		if ( PageTemplatesModule::TEMPLATE_CANVAS === $this->current_page_template ) {
+			$allowed_core = [];
+		} else {
+			$allowed_core = [ 'header', 'footer' ];
+		}
+
+		foreach ( $locations as $location => $settings ) {
+			if ( ! empty( $settings['is_core'] ) && ! in_array( $location, $allowed_core, true ) ) {
+				unset( $locations[ $location ] );
+			}
+		}
+
+		return $locations;
 	}
 }

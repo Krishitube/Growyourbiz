@@ -15,8 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Autoloader {
 
-	const ALIASES_DEPRECATION_RANGE = 0.2;
-
 	/**
 	 * Classes map.
 	 *
@@ -85,7 +83,6 @@ class Autoloader {
 
 	private static function init_classes_map() {
 		self::$classes_map = [
-			'Admin' => 'includes/admin.php',
 			'Api' => 'includes/api.php',
 			'Base_Control' => 'includes/controls/base.php',
 			'Base_Data_Control' => 'includes/controls/base-data.php',
@@ -95,9 +92,8 @@ class Autoloader {
 			'Conditions' => 'includes/conditions.php',
 			'Controls_Manager' => 'includes/managers/controls.php',
 			'Controls_Stack' => 'includes/base/controls-stack.php',
+			'Sub_Controls_Stack' => 'includes/base/sub-controls-stack.php',
 			'DB' => 'includes/db.php',
-			'Debug\Debug' => 'includes/debug/debug.php',
-			'Editor' => 'includes/editor.php',
 			'Elements_Manager' => 'includes/managers/elements.php',
 			'Embed' => 'includes/embed.php',
 			'Fonts' => 'includes/fonts.php',
@@ -108,21 +104,15 @@ class Autoloader {
 			'Images_Manager' => 'includes/managers/image.php',
 			'Maintenance' => 'includes/maintenance.php',
 			'Maintenance_Mode' => 'includes/maintenance-mode.php',
-			'Posts_CSS_Manager' => 'includes/managers/css-files.php',
 			'Preview' => 'includes/preview.php',
 			'Rollback' => 'includes/rollback.php',
-			'Scheme_Base' => 'includes/schemes/base.php',
-			'Scheme_Color' => 'includes/schemes/color.php',
-			'Scheme_Color_Picker' => 'includes/schemes/color-picker.php',
-			'Scheme_Typography' => 'includes/schemes/typography.php',
-			'Scheme_Interface' => 'includes/interfaces/scheme.php',
-			'Schemes_Manager' => 'includes/managers/schemes.php',
 			'Settings' => 'includes/settings/settings.php',
 			'Settings_Controls' => 'includes/settings/controls.php',
 			'Settings_Validations' => 'includes/settings/validations.php',
 			'Settings_Page' => 'includes/settings/settings-page.php',
 			'Shapes' => 'includes/shapes.php',
 			'Skins_Manager' => 'includes/managers/skins.php',
+			'Icons_Manager' => 'includes/managers/icons.php',
 			'Stylesheet' => 'includes/stylesheet.php',
 			'System_Info\Main' => 'includes/settings/system-info/main.php',
 			'TemplateLibrary\Classes\Import_Images' => 'includes/template-library/classes/class-import-images.php',
@@ -132,7 +122,6 @@ class Autoloader {
 			'TemplateLibrary\Source_Remote' => 'includes/template-library/sources/remote.php',
 			'Tools' => 'includes/settings/tools.php',
 			'Tracker' => 'includes/tracker.php',
-			'Upgrades' => 'includes/upgrades.php',
 			'User' => 'includes/user.php',
 			'Utils' => 'includes/utils.php',
 			'Widget_WordPress' => 'includes/widgets/wordpress.php',
@@ -148,7 +137,7 @@ class Autoloader {
 		] );
 
 		foreach ( $controls_names as $control_name ) {
-			$class_name = 'Control_' . ucwords( $control_name, '_' );
+			$class_name = 'Control_' . self::normalize_class_name( $control_name, '_' );
 
 			self::$classes_map[ $class_name ] = 'includes/controls/' . str_replace( '_', '-', $control_name ) . '.php';
 		}
@@ -156,45 +145,94 @@ class Autoloader {
 		$controls_groups_names = Controls_Manager::get_groups_names();
 
 		foreach ( $controls_groups_names as $group_name ) {
-			$class_name = 'Group_Control_' . ucwords( str_replace( '-', '_', $group_name ), '_' );
+			$class_name = 'Group_Control_' . self::normalize_class_name( str_replace( '-', '_', $group_name ), '_' );
 
 			self::$classes_map[ $class_name ] = 'includes/controls/groups/' . $group_name . '.php';
 		}
 	}
 
+	/**
+	 * Normalize Class Name
+	 *
+	 * Used to convert control names to class name,
+	 * a ucwords polyfill for php versions not supporting delimiter parameter
+	 * reference : https://github.com/elementor/elementor/issues/7310#issuecomment-469593385
+	 *
+	 * @param $string
+	 * @param string $delimiter
+	 *
+	 * @todo Remove once we bump minimum php version to 5.6
+	 * @return mixed
+	 */
+	private static function normalize_class_name( $string, $delimiter = ' ' ) {
+		return str_replace( ' ', $delimiter, ucwords( str_replace( $delimiter, ' ', $string ) ) );
+	}
+
 	private static function init_classes_aliases() {
 		self::$classes_aliases = [
-			'CSS_File' => [
-				'replacement' => 'Core\Files\CSS\Base',
-				'version' => '2.1.0',
-			],
-			'Global_CSS_File' => [
-				'replacement' => 'Core\Files\CSS\Global_CSS',
-				'version' => '2.1.0',
-			],
-			'Post_CSS_File' => [
-				'replacement' => 'Core\Files\CSS\Post',
-				'version' => '2.1.0',
-			],
-			'Posts_CSS_Manager' => [
-				'replacement' => 'Core\Files\Manager',
-				'version' => '2.1.0',
-			],
-			'Post_Preview_CSS' => [
-				'replacement' => 'Core\Files\CSS\Post_Preview',
-				'version' => '2.1.0',
-			],
-			'Responsive' => [
-				'replacement' => 'Core\Responsive\Responsive',
-				'version' => '2.1.0',
-			],
-			'Admin' => [
-				'replacement' => 'Core\Admin\Admin',
-				'version' => '2.2.0',
-			],
 			'Core\Ajax' => [
 				'replacement' => 'Core\Common\Modules\Ajax\Module',
 				'version' => '2.3.0',
+			],
+			'Editor' => [
+				'replacement' => 'Core\Editor\Editor',
+				'version' => '2.6.0',
+			],
+			'Scheme_Base' => [
+				'replacement' => 'Core\Schemes\Base',
+				'version' => '2.8.0',
+			],
+			'Scheme_Color' => [
+				'replacement' => 'Core\Schemes\Color',
+				'version' => '2.8.0',
+			],
+			'Scheme_Color_Picker' => [
+				'replacement' => 'Core\Schemes\Color_Picker',
+				'version' => '2.8.0',
+			],
+			'Schemes_Manager' => [
+				'replacement' => 'Core\Schemes\Manager',
+				'version' => '2.8.0',
+			],
+			'Scheme_Typography' => [
+				'replacement' => 'Core\Schemes\Typography',
+				'version' => '2.8.0',
+			],
+			'System_Info\Main' => [
+				'replacement' => 'Modules\System_Info\Module',
+				'version' => '2.9.0',
+			],
+			'System_Info\Classes\Abstracts\Base_Reporter' => [
+				'replacement' => 'Modules\System_Info\Reporters\Base',
+				'version' => '2.9.0',
+			],
+			'System_Info\Classes\Server_Reporter' => [
+				'replacement' => 'Modules\System_Info\Reporters\Server',
+				'version' => '2.9.0',
+			],
+			'System_Info\Classes\MU_Plugins_Reporter' => [
+				'replacement' => 'Modules\System_Info\Reporters\MU_Plugins',
+				'version' => '2.9.0',
+			],
+			'System_Info\Classes\Network_Plugins_Reporter' => [
+				'replacement' => 'Modules\System_Info\Reporters\Network_Plugins',
+				'version' => '2.9.0',
+			],
+			'System_Info\Classes\Plugins_Reporter' => [
+				'replacement' => 'Modules\System_Info\Reporters\Plugins',
+				'version' => '2.9.0',
+			],
+			'System_Info\Classes\Theme_Reporter' => [
+				'replacement' => 'Modules\System_Info\Reporters\Theme',
+				'version' => '2.9.0',
+			],
+			'System_Info\Classes\User_Reporter' => [
+				'replacement' => 'Modules\System_Info\Reporters\User',
+				'version' => '2.9.0',
+			],
+			'System_Info\Helpers\Model_Helper' => [
+				'replacement' => 'Modules\System_Info\Helpers\Model_Helper',
+				'version' => '2.9.0',
 			],
 		];
 	}
@@ -270,17 +308,7 @@ class Autoloader {
 		if ( $has_class_alias ) {
 			class_alias( $final_class_name, $class );
 
-			preg_match( '/^[0-9]+\.[0-9]+/', ELEMENTOR_VERSION, $current_version );
-
-			$current_version_as_float = (float) $current_version[0];
-
-			preg_match( '/^[0-9]+\.[0-9]+/', $alias_data['version'], $alias_version );
-
-			$alias_version_as_float = (float) $alias_version[0];
-
-			if ( $current_version_as_float - $alias_version_as_float >= self::ALIASES_DEPRECATION_RANGE ) {
-				_deprecated_file( $class, $alias_data['version'], $final_class_name );
-			}
+			Utils::handle_deprecation( $class, $alias_data['version'], $final_class_name );
 		}
 	}
 }

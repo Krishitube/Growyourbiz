@@ -9,6 +9,7 @@ use ElementorPro\Modules\Popup\DisplaySettings\Base;
 use ElementorPro\Modules\Popup\DisplaySettings\Timing;
 use ElementorPro\Modules\Popup\DisplaySettings\Triggers;
 use ElementorPro\Modules\ThemeBuilder\Documents\Theme_Section_Document;
+use ElementorPro\Modules\ThemeBuilder\Module as ThemeBuilderModule;
 use ElementorPro\Plugin;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -29,6 +30,8 @@ class Document extends Theme_Section_Document {
 
 		$properties['admin_tab_group'] = 'popup';
 		$properties['location'] = 'popup';
+		$properties['support_kit'] = true;
+		$properties['support_site_editor'] = false;
 
 		return $properties;
 	}
@@ -65,8 +68,8 @@ class Document extends Theme_Section_Document {
 		return $this->display_settings;
 	}
 
-	public function _get_initial_config() {
-		$config = parent::_get_initial_config();
+	public function get_initial_config() {
+		$config = parent::get_initial_config();
 
 		$display_settings = $this->get_display_settings();
 
@@ -107,7 +110,14 @@ class Document extends Theme_Section_Document {
 
 		$display_settings = $this->get_display_settings();
 
-		$settings['triggers'] = $display_settings['triggers']->get_frontend_settings();
+		// Disable triggers if the popup is not printed by the theme builder conditions.
+		// avoid auto show the popup if it's enqueued by a dynamic tag and etc.)
+		$popups_by_condition = ThemeBuilderModule::instance()->get_conditions_manager()->get_documents_for_location( 'popup' );
+
+		if ( $popups_by_condition && isset( $popups_by_condition[ $this->get_main_id() ] ) ) {
+			$settings['triggers'] = $display_settings['triggers']->get_frontend_settings();
+		}
+
 		$settings['timing'] = $display_settings['timing']->get_frontend_settings();
 
 		return $settings;
@@ -233,7 +243,6 @@ class Document extends Theme_Section_Document {
 			[
 				'label' => __( 'Horizontal', 'elementor-pro' ),
 				'type' => Controls_Manager::CHOOSE,
-				'label_block' => false,
 				'toggle' => false,
 				'default' => 'center',
 				'options' => [
@@ -265,7 +274,6 @@ class Document extends Theme_Section_Document {
 			[
 				'label' => __( 'Vertical', 'elementor-pro' ),
 				'type' => Controls_Manager::CHOOSE,
-				'label_block' => false,
 				'toggle' => false,
 				'default' => 'center',
 				'options' => [
@@ -321,7 +329,7 @@ class Document extends Theme_Section_Document {
 			]
 		);
 
-		$this->add_control(
+		$this->add_responsive_control(
 			'entrance_animation',
 			[
 				'label' => __( 'Entrance Animation', 'elementor-pro' ),
@@ -331,11 +339,21 @@ class Document extends Theme_Section_Document {
 			]
 		);
 
+		$this->add_responsive_control(
+			'exit_animation',
+			[
+				'label' => __( 'Exit Animation', 'elementor-pro' ),
+				'type' => Controls_Manager::EXIT_ANIMATION,
+				'frontend_available' => true,
+			]
+		);
+
 		$this->add_control(
 			'entrance_animation_duration',
 			[
 				'label' => __( 'Animation Duration', 'elementor-pro' ) . ' (sec)',
 				'type' => Controls_Manager::SLIDER,
+				'frontend_available' => true,
 				'default' => [
 					'size' => 1.2,
 				],
@@ -349,8 +367,20 @@ class Document extends Theme_Section_Document {
 				'selectors' => [
 					'{{WRAPPER}} .dialog-widget-content' => 'animation-duration: {{SIZE}}s',
 				],
-				'condition' => [
-					'entrance_animation!' => '',
+				'conditions' => [
+					'relation' => 'or',
+					'terms' => [
+						[
+							'name' => 'entrance_animation',
+							'operator' => '!==',
+							'value' => '',
+						],
+						[
+							'name' => 'exit_animation',
+							'operator' => '!==',
+							'value' => '',
+						],
+					],
 				],
 			]
 		);
@@ -387,16 +417,10 @@ class Document extends Theme_Section_Document {
 			'border_radius',
 			[
 				'label' => __( 'Border Radius', 'elementor-pro' ),
-				'type' => Controls_Manager::SLIDER,
+				'type' => Controls_Manager::DIMENSIONS,
 				'size_units' => [ 'px', '%' ],
-				'range' => [
-					'px' => [
-						'min' => 0,
-						'max' => 200,
-					],
-				],
 				'selectors' => [
-					'{{WRAPPER}} .dialog-widget-content' => 'border-radius: {{SIZE}}{{UNIT}}',
+					'{{WRAPPER}} .dialog-widget-content' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}}',
 				],
 			]
 		);
@@ -697,6 +721,17 @@ class Document extends Theme_Section_Document {
 			]
 		);
 
+		$this->add_control(
+			'open_selector',
+			[
+				'label' => __( 'Open By Selector', 'elementor-pro' ),
+				'type' => Controls_Manager::TEXT,
+				'placeholder' => __( '#id, .class', 'elementor-pro' ),
+				'description' => __( 'In order to open a popup on selector click, please set your Popup Conditions', 'elementor-pro' ),
+				'frontend_available' => true,
+			]
+		);
+
 		$this->add_responsive_control(
 			'margin',
 			[
@@ -739,9 +774,8 @@ class Document extends Theme_Section_Document {
 
 	protected function get_remote_library_config() {
 		$config = parent::get_remote_library_config();
-
 		$config['type'] = 'popup';
-		$config['category'] = '';
+		$config['default_route'] = 'templates/popups';
 		$config['autoImportSettings'] = true;
 
 		return $config;

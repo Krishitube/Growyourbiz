@@ -2,9 +2,10 @@
 namespace ElementorPro\Modules\Woocommerce\Widgets;
 
 use Elementor\Controls_Manager;
+use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
+use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
 use Elementor\Group_Control_Typography;
-use Elementor\Scheme_Color;
-use Elementor\Scheme_Typography;
+use ElementorPro\Modules\Woocommerce\Classes\Products_Renderer;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -13,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Archive_Products extends Products {
 
 	public function get_name() {
-		return 'woocommerce-archive-products';
+		return 'wc-archive-products';
 	}
 
 	public function get_title() {
@@ -29,18 +30,72 @@ class Archive_Products extends Products {
 	protected function _register_controls() {
 		parent::_register_controls();
 
+		$this->remove_responsive_control( 'columns' );
+		$this->remove_responsive_control( 'rows' );
+		$this->remove_control( 'orderby' );
+		$this->remove_control( 'order' );
+
 		$this->update_control(
-			'rows',
+			'products_class',
 			[
-				'default' => 4,
-			],
+				'prefix_class' => 'elementor-products-grid elementor-',
+			]
+		);
+
+		// Should be kept as hidden since required for "allow_order"
+		$this->update_control(
+			'paginate',
 			[
-				'recursive' => true,
+				'type' => 'hidden',
+				'default' => 'yes',
 			]
 		);
 
 		$this->update_control(
-			'paginate',
+			'allow_order',
+			[
+				'default' => 'yes',
+			]
+		);
+
+		$this->start_injection( [
+			'at' => 'before',
+			'of' => 'allow_order',
+		] );
+
+		if ( ! get_theme_support( 'woocommerce' ) ) {
+			$this->add_control(
+				'wc_notice_wc_not_supported',
+				[
+					'type' => Controls_Manager::RAW_HTML,
+					'raw' => __( 'Looks like you are using WooCommerce, while your theme does not support it. Please consider switching themes.', 'elementor-pro' ),
+					'content_classes' => 'elementor-panel-alert elementor-panel-alert-warning',
+				]
+			);
+		}
+
+		$this->add_control(
+			'wc_notice_use_customizer',
+			[
+				'type' => Controls_Manager::RAW_HTML,
+				'raw' => __( 'To change the Products Archive’s layout, go to Appearance > Customize.', 'elementor-pro' ),
+				'content_classes' => 'elementor-panel-alert elementor-panel-alert-info',
+			]
+		);
+
+		$this->add_control(
+			'wc_notice_wrong_data',
+			[
+				'type' => Controls_Manager::RAW_HTML,
+				'raw' => __( 'The editor preview might look different from the live site. Please make sure to check the frontend.', 'elementor-pro' ),
+				'content_classes' => 'elementor-panel-alert elementor-panel-alert-info',
+			]
+		);
+
+		$this->end_injection();
+
+		$this->update_control(
+			'show_result_count',
 			[
 				'default' => 'yes',
 			]
@@ -54,7 +109,7 @@ class Archive_Products extends Products {
 		);
 
 		$this->update_control(
-			'query_post_type',
+			Products_Renderer::QUERY_CONTROL_NAME . '_post_type',
 			[
 				'default' => 'current_query',
 			]
@@ -94,9 +149,8 @@ class Archive_Products extends Products {
 			[
 				'label' => __( 'Color', 'elementor-pro' ),
 				'type' => Controls_Manager::COLOR,
-				'scheme' => [
-					'type' => Scheme_Color::get_type(),
-					'value' => Scheme_Color::COLOR_3,
+				'global' => [
+					'default' => Global_Colors::COLOR_TEXT,
 				],
 				'selectors' => [
 					'{{WRAPPER}} .elementor-products-nothing-found' => 'color: {{VALUE}};',
@@ -108,21 +162,13 @@ class Archive_Products extends Products {
 			Group_Control_Typography::get_type(),
 			[
 				'name' => 'nothing_found_typography',
-				'scheme' => Scheme_Typography::TYPOGRAPHY_3,
+				'global' => [
+					'default' => Global_Typography::TYPOGRAPHY_TEXT,
+				],
 				'selector' => '{{WRAPPER}} .elementor-products-nothing-found',
 			]
 		);
 
 		$this->end_controls_section();
-	}
-
-	public function render_no_results() {
-		echo '<div class="elementor-nothing-found elementor-products-nothing-found">' . esc_html( $this->get_settings( 'nothing_found_message' ) ) . '</div>';
-	}
-
-	protected function render() {
-		add_action( 'woocommerce_shortcode_products_loop_no_results', [ $this, 'render_no_results' ] );
-
-		parent::render();
 	}
 }

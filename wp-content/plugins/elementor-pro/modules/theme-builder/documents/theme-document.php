@@ -3,6 +3,8 @@ namespace ElementorPro\Modules\ThemeBuilder\Documents;
 
 use Elementor\Controls_Manager;
 use Elementor\Modules\Library\Documents\Library_Document;
+use Elementor\TemplateLibrary\Source_Local;
+use Elementor\Utils;
 use ElementorPro\Modules\QueryControl\Module as QueryModule;
 use ElementorPro\Modules\ThemeBuilder\Module;
 use ElementorPro\Plugin;
@@ -14,6 +16,128 @@ if ( ! defined( 'ABSPATH' ) ) {
 abstract class Theme_Document extends Library_Document {
 
 	const LOCATION_META_KEY = '_elementor_location';
+
+	public static function get_properties() {
+		$properties = parent::get_properties();
+
+		$properties['admin_tab_group'] = Module::ADMIN_LIBRARY_TAB_GROUP;
+		$properties['support_kit'] = true;
+		$properties['support_site_editor'] = true;
+
+		return $properties;
+	}
+
+	/**
+	 * Get document type for site editor with backwards compatibility.
+	 *
+	 * A temp function that checks if current document has it's own static method `get_site_editor_type`
+	 * Otherwise get the type from the non-static method `get_name`.
+	 *
+	 * @return mixed|string
+	 * @throws \ReflectionException
+	 */
+	protected static function get_site_editor_type_bc() {
+		static $types = [];
+
+		$class_name = static::get_class_full_name();
+
+		$reflection = new \ReflectionClass( $class_name );
+		$method = $reflection->getMethod( 'get_site_editor_type' );
+
+		// It's own method, use it.
+		if ( $class_name === $method->class ) {
+			return static::get_site_editor_type();
+		}
+
+		// _deprecated_function( 'get_name', '3.0.0', 'get_site_editor_type' );
+
+		// Fallback, get from class instance name (with caching).
+		if ( isset( $types[ $class_name ] ) ) {
+			return $types[ $class_name ];
+		}
+
+		$instance = new static();
+
+		$types[ $class_name ] = $instance->get_name();
+
+		return $types[ $class_name ];
+	}
+
+	protected static function get_site_editor_route() {
+		return '/site-editor/templates/' . static::get_site_editor_type_bc();
+	}
+
+	protected static function get_site_editor_icon() {
+		return 'eicon eicon-custom';
+	}
+
+	protected static function get_site_editor_layout() {
+		return 'grid';
+	}
+
+	protected static function get_site_editor_thumbnail_url() {
+		return ELEMENTOR_ASSETS_URL . 'images/app/site-editor/' . static::get_site_editor_type_bc() . '.svg';
+	}
+
+	public static function get_site_editor_config() {
+		return [
+			'type' => static::get_site_editor_type_bc(),
+			'icon' => static::get_site_editor_icon(),
+			'title' => static::get_title(),
+			'page_title' => static::get_title(),
+			'page_layout' => static::get_site_editor_layout(),
+
+			// Todo: Remove. Core plugin should use `urls.route`.
+			'url' => static::get_site_editor_route(),
+
+			'urls' => [
+				'route' => static::get_site_editor_route(),
+				'create' => static::get_create_url(),
+				'thumbnail' => static::get_site_editor_thumbnail_url(),
+			],
+			'tooltip_data' => static::get_site_editor_tooltip_data(),
+		];
+	}
+
+	public static function get_editor_panel_config() {
+		$panel_config = parent::get_editor_panel_config();
+		$document_config = static::get_properties();
+
+		if ( true === $document_config['support_site_editor'] ) {
+			$panel_config['messages']['publish_notification'] = __( 'Congrats! Your Site Part is Live', 'elementor-pro' );
+		}
+
+		return $panel_config;
+	}
+
+	protected function get_have_a_look_url() {
+		$document_config = static::get_properties();
+
+		if ( true === $document_config['support_site_editor'] ) {
+			return '';
+		}
+
+		return parent::get_have_a_look_url();
+	}
+
+	public static function get_create_url() {
+		$base_create_url = Utils::get_create_new_post_url( Source_Local::CPT );
+
+		return add_query_arg( [ 'template_type' => static::get_site_editor_type_bc() ], $base_create_url );
+	}
+
+	protected static function get_site_editor_tooltip_data() {
+		return [
+			'title' => '',
+			'content' => '',
+			'tip' => '',
+			'video_url' => '',
+		];
+	}
+
+	public function get_name() {
+		return static::get_site_editor_type();
+	}
 
 	public function get_location_label() {
 		$location = $this->get_location();
@@ -82,14 +206,6 @@ abstract class Theme_Document extends Library_Document {
 		return [];
 	}
 
-	public static function get_properties() {
-		$properties = parent::get_properties();
-
-		$properties['admin_tab_group'] = 'theme';
-
-		return $properties;
-	}
-
 	public function get_container_attributes() {
 		$attributes = parent::get_container_attributes();
 
@@ -148,8 +264,9 @@ abstract class Theme_Document extends Library_Document {
 			[
 				'type' => QueryModule::QUERY_CONTROL_ID,
 				'label_block' => true,
-				'filter_type' => '',
-				'object_type' => '',
+				'autocomplete' => [
+					'object' => QueryModule::QUERY_OBJECT_JS,
+				],
 				'separator' => 'none',
 				'export' => false,
 				'condition' => [
@@ -186,6 +303,90 @@ abstract class Theme_Document extends Library_Document {
 		);
 
 		$this->end_controls_section();
+
+		$this->inject_html_tag_control();
+	}
+
+	/**
+	 * @since 2.9.0
+	 *
+	 * If the implementing document uses optional wrapper HTML tags, this method injects the control to choose the tag
+	 */
+	private function inject_html_tag_control() {
+		$wrapper_tags = $this->get_wrapper_tags();
+
+		// Only proceed if the implementing document has optional wrapper HTML tags to replace 'div'
+		if ( ! $wrapper_tags ) {
+			return;
+		}
+
+		// Add 'div' to the beginning of the list of wrapper tags
+		array_unshift( $wrapper_tags, 'div' );
+
+		/**
+		 * Inject the control that sets the HTML tag for the header/footer wrapper element
+		 */
+		$this->start_injection( [
+			'of' => 'post_status',
+			'fallback' => [
+				'of' => 'post_title',
+			],
+		] );
+
+		$this->add_control(
+			'content_wrapper_html_tag',
+			[
+				'label' => __( 'HTML Tag', 'elementor-pro' ),
+				'type' => Controls_Manager::SELECT,
+				'default' => 'div',
+				'options' => array_combine( $wrapper_tags, $wrapper_tags ),
+			]
+		);
+
+		$this->end_injection();
+	}
+
+	/**
+	 * @param null $elements_data
+	 * @since 2.9.0
+	 * @access public
+	 *
+	 * Overwrite method from document.php to check for user-selected tags to use as the document wrapper element
+	 */
+	public function print_elements_with_wrapper( $elements_data = null ) {
+		// Check if the implementing document has optional wrapper tags
+		$has_wrapper_tags = $this->get_wrapper_tags();
+		$settings = $this->get_settings_for_display();
+		$wrapper_tag = 'div';
+
+		// Only proceed if the inheriting document has optional wrapper HTML tags to replace 'div'
+		if ( $has_wrapper_tags ) {
+			$wrapper_tag = $settings['content_wrapper_html_tag'];
+		}
+
+		if ( ! $elements_data ) {
+			$elements_data = $this->get_elements_data();
+		}
+		?>
+		<<?php echo $wrapper_tag; ?> <?php echo Utils::render_html_attributes( $this->get_container_attributes() ); ?>>
+		<div class="elementor-section-wrap">
+			<?php $this->print_elements( $elements_data ); ?>
+		</div>
+		</<?php echo $wrapper_tag; ?>>
+		<?php
+	}
+
+	public function get_wrapper_tags() {
+		// 'div' is added later, no need to include it in this list
+		return [
+			'main',
+			'article',
+			'header',
+			'footer',
+			'section',
+			'aside',
+			'nav',
+		];
 	}
 
 	public function get_elements_raw_data( $data = null, $with_html_content = false ) {
@@ -213,6 +414,11 @@ abstract class Theme_Document extends Library_Document {
 	}
 
 	public function get_wp_preview_url() {
+		// Ajax request from editor.
+		if ( ! empty( $_POST['initial_document_id'] ) ) {
+			return parent::get_wp_preview_url();
+		}
+
 		$preview_id = (int) $this->get_settings( 'preview_id' );
 		$post_id = $this->get_main_id();
 
@@ -230,7 +436,7 @@ abstract class Theme_Document extends Library_Document {
 						$preview_url = get_author_posts_url( $preview_id );
 						break;
 					case 'date':
-						$preview_url = add_query_arg( 'year', date( 'Y' ), $home_url );
+						$preview_url = add_query_arg( 'year', gmdate( 'Y' ), $home_url );
 						break;
 				}
 				break;
@@ -317,7 +523,7 @@ abstract class Theme_Document extends Library_Document {
 						break;
 					case 'date':
 						$query_args = [
-							'year' => date( 'Y' ),
+							'year' => gmdate( 'Y' ),
 						];
 						break;
 					case 'recent_posts':
@@ -395,6 +601,13 @@ abstract class Theme_Document extends Library_Document {
 		return $query_args;
 	}
 
+	public function after_preview_switch_to_query() {
+		global $wp_query;
+		if ( 'archive/recent_posts' === $this->get_settings( 'preview_type' ) ) {
+			$wp_query->is_archive = true;
+		}
+	}
+
 	public function get_location() {
 		$value = self::get_property( 'location' );
 		if ( ! $value ) {
@@ -402,5 +615,13 @@ abstract class Theme_Document extends Library_Document {
 		}
 
 		return $value;
+	}
+
+	public function get_initial_config() {
+		$config = parent::get_initial_config();
+
+		$config['support_site_editor'] = static::get_property( 'support_site_editor' );
+
+		return $config;
 	}
 }

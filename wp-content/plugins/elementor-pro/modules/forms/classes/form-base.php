@@ -104,7 +104,7 @@ abstract class Form_Base extends Base_Widget {
 			<select <?php echo $this->get_render_attribute_string( 'select' . $i ); ?>>
 				<?php
 				foreach ( $options as $key => $option ) {
-					$option_id = $item['_id'] . $key;
+					$option_id = $item['custom_id'] . $key;
 					$option_value = esc_attr( $option );
 					$option_label = esc_html( $option );
 
@@ -116,7 +116,8 @@ abstract class Form_Base extends Base_Widget {
 
 					$this->add_render_attribute( $option_id, 'value', $option_value );
 
-					if ( ! empty( $item['field_value'] ) && $option_value === $item['field_value'] ) {
+					// Support multiple selected values
+					if ( ! empty( $item['field_value'] ) && in_array( $option_value, explode( ',', $item['field_value'] ) ) ) {
 						$this->add_render_attribute( $option_id, 'selected', 'selected' );
 					}
 					echo '<option ' . $this->get_render_attribute_string( $option_id ) . '>' . $option_label . '</option>';
@@ -136,7 +137,7 @@ abstract class Form_Base extends Base_Widget {
 		if ( $options ) {
 			$html .= '<div class="elementor-field-subgroup ' . esc_attr( $item['css_classes'] ) . ' ' . $item['inline_list'] . '">';
 			foreach ( $options as $key => $option ) {
-				$element_id = $item['_id'] . $key;
+				$element_id = $item['custom_id'] . $key;
 				$html_id = $this->get_attribute_id( $item ) . '-' . $key;
 				$option_label = $option;
 				$option_value = $option;
@@ -178,7 +179,7 @@ abstract class Form_Base extends Base_Widget {
 						'elementor-field-type-' . $item['field_type'],
 						'elementor-field-group',
 						'elementor-column',
-						'elementor-field-group-' . $item['_id'],
+						'elementor-field-group-' . $item['custom_id'],
 					],
 				],
 				'input' . $i => [
@@ -241,11 +242,11 @@ abstract class Form_Base extends Base_Widget {
 	public function render_plain_content() {}
 
 	public function get_attribute_name( $item ) {
-		return "form_fields[{$item['_id']}]";
+		return "form_fields[{$item['custom_id']}]";
 	}
 
 	public function get_attribute_id( $item ) {
-		return 'form-field-' . $item['_id'];
+		return 'form-field-' . $item['custom_id'];
 	}
 
 	private function add_required_attribute( $element ) {

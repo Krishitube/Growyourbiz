@@ -333,7 +333,11 @@ abstract class Group_Control_Base implements Group_Control_Interface {
 			}
 
 			if ( ! empty( $field['condition'] ) ) {
-				$field = $this->add_conditions_prefix( $field );
+				$field = $this->add_condition_prefix( $field );
+			}
+
+			if ( ! empty( $field['conditions'] ) ) {
+				$field['conditions'] = $this->add_conditions_prefix( $field['conditions'] );
 			}
 
 			if ( ! empty( $field['selectors'] ) ) {
@@ -342,9 +346,12 @@ abstract class Group_Control_Base implements Group_Control_Interface {
 
 			if ( ! empty( $field['device_args'] ) ) {
 				foreach ( $field['device_args'] as $device => $device_arg ) {
-
 					if ( ! empty( $field['device_args'][ $device ]['condition'] ) ) {
-						$field['device_args'][ $device ] = $this->add_conditions_prefix( $field['device_args'][ $device ] );
+						$field['device_args'][ $device ] = $this->add_condition_prefix( $field['device_args'][ $device ] );
+					}
+
+					if ( ! empty( $field['device_args'][ $device ]['conditions'] ) ) {
+						$field['device_args'][ $device ]['conditions'] = $this->add_conditions_prefix( $field['device_args'][ $device ]['conditions'] );
 					}
 
 					if ( ! empty( $device_arg['selectors'] ) ) {
@@ -389,6 +396,10 @@ abstract class Group_Control_Base implements Group_Control_Interface {
 	 */
 	protected function init_args( $args ) {
 		$this->args = array_merge( $this->get_default_args(), $this->get_child_default_args(), $args );
+
+		if ( isset( $this->args['scheme'] ) ) {
+			$this->args['global']['default'] = Plugin::$instance->kits_manager->convert_scheme_to_global( $this->args['scheme'] );
+		}
 	}
 
 	/**
@@ -426,7 +437,7 @@ abstract class Group_Control_Base implements Group_Control_Interface {
 	 *
 	 * @return array Group control field.
 	 */
-	private function add_conditions_prefix( $field ) {
+	private function add_condition_prefix( $field ) {
 		$controls_prefix = $this->get_controls_prefix();
 
 		$prefixed_condition_keys = array_map(
@@ -442,6 +453,22 @@ abstract class Group_Control_Base implements Group_Control_Interface {
 		);
 
 		return $field;
+	}
+
+	private function add_conditions_prefix( $conditions ) {
+		$controls_prefix = $this->get_controls_prefix();
+
+		foreach ( $conditions['terms'] as & $condition ) {
+			if ( isset( $condition['terms'] ) ) {
+				$condition = $this->add_conditions_prefix( $condition );
+
+				continue;
+			}
+
+			$condition['name'] = $controls_prefix . $condition['name'];
+		}
+
+		return $conditions;
 	}
 
 	/**
@@ -480,9 +507,25 @@ abstract class Group_Control_Base implements Group_Control_Interface {
 		$controls_prefix = $this->get_controls_prefix();
 
 		foreach ( $selectors as &$selector ) {
-			$selector = preg_replace_callback( '/\{\{\K(.*?)(?=}})/', function( $matches ) use ( $controls_prefix ) {
-				return preg_replace_callback( '/[^ ]+(?=\.)/', function( $sub_matches ) use ( $controls_prefix ) {
-					return $controls_prefix . $sub_matches[0];
+			$selector = preg_replace_callback( '/{{\K(.*?)(?=}})/', function( $matches ) use ( $controls_prefix ) {
+				$is_external_reference = false;
+
+				return preg_replace_callback( '/[^ ]+?(?=\.)\./', function( $sub_matches ) use ( $controls_prefix, &$is_external_reference ) {
+					$placeholder = $sub_matches[0];
+
+					if ( 'external.' === $placeholder ) {
+						$is_external_reference = true;
+
+						return '';
+					}
+
+					if ( $is_external_reference ) {
+						$is_external_reference = false;
+
+						return $placeholder;
+					}
+
+					return $controls_prefix . $placeholder;
 				}, $matches[1] );
 			}, $selector );
 		}
@@ -504,7 +547,15 @@ abstract class Group_Control_Base implements Group_Control_Interface {
 
 		$settings = $this->get_args();
 
-		if ( ! empty( $settings['label'] ) ) {
+		if ( isset( $settings['global'] ) ) {
+			if ( ! isset( $popover_options['settings']['global'] ) ) {
+				$popover_options['settings']['global'] = [];
+			}
+
+			$popover_options['settings']['global'] = array_replace_recursive( $popover_options['settings']['global'], $settings['global'] );
+		}
+
+		if ( isset( $settings['label'] ) ) {
 			$label = $settings['label'];
 		} else {
 			$label = $popover_options['starter_title'];
@@ -531,6 +582,8 @@ abstract class Group_Control_Base implements Group_Control_Interface {
 		if ( isset( $this->args['fields_options'][ $starter_name ] ) ) {
 			$control_params = array_merge( $control_params, $this->args['fields_options'][ $starter_name ] );
 		}
+
+		$control_params['groupPrefix'] = $this->get_controls_prefix();
 
 		$element->add_control( $this->get_controls_prefix() . $starter_name, $control_params );
 

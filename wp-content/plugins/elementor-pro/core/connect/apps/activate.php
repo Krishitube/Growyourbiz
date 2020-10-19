@@ -9,8 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class Activate extends Common_App {
+	public function get_title() {
+		return __( 'Activate', 'elementor-pro' );
+	}
 
-	protected function get_slug() {
+	public function get_slug() {
 		return 'activate';
 	}
 
@@ -18,7 +21,18 @@ class Activate extends Common_App {
 		$this->action_activate_license();
 	}
 
-	public function render_admin_widget() {}
+	/**
+	 * @since 2.3.0
+	 * @access public
+	 */
+	public function action_authorize() {
+		// In case the first connect was not from Activate App - require a new authorization.
+		if ( $this->is_connected() && ! License\Admin::get_license_key() ) {
+			$this->disconnect();
+		}
+
+		parent::action_authorize();
+	}
 
 	public function action_activate_pro() {
 		$this->action_activate_license();
@@ -92,5 +106,27 @@ class Activate extends Common_App {
 
 		$this->redirect_to_admin_page( License\Admin::get_url() );
 		die;
+	}
+
+	public function action_reset() {
+		if ( current_user_can( 'manage_options' ) ) {
+			delete_option( 'elementor_pro_license_key' );
+			delete_transient( 'elementor_pro_license_data' );
+		}
+
+		$this->redirect_to_admin_page();
+	}
+
+	protected function get_app_info() {
+		return [
+			'license_data' => [
+				'label' => 'License Data',
+				'value' => get_option( 'elementor_pro_license_data' ),
+			],
+			'license_key' => [
+				'label' => 'License Key',
+				'value' => get_option( 'elementor_pro_license_key' ),
+			],
+		];
 	}
 }

@@ -71,7 +71,7 @@ class Mailerlite extends Integration_Base {
 				'condition' => [
 					'mailerlite_api_key_source' => 'custom',
 				],
-				'description' => __( 'Use this field to set a custom API key for the current form', 'elementor-pro' ),
+				'description' => __( 'Use this field to set a custom API Key for the current form', 'elementor-pro' ),
 			]
 		);
 
@@ -116,6 +116,17 @@ class Mailerlite extends Integration_Base {
 						'type' => Controls_Manager::SELECT,
 					],
 				],
+				'condition' => [
+					'mailerlite_group!' => '',
+				],
+			]
+		);
+
+		$widget->add_control(
+			'allow_resubscribe',
+			[
+				'label' => __( 'Allow Resubscribe', 'elementor-pro' ),
+				'type' => Controls_Manager::SWITCHER,
 				'condition' => [
 					'mailerlite_group!' => '',
 				],
@@ -180,6 +191,12 @@ class Mailerlite extends Integration_Base {
 		];
 
 		$subscriber['fields'] = $this->get_mailerlite_custom_fields( $record );
+
+		// Allow re-subscribe
+		$allow_resubscribe = $record->get_form_settings( 'allow_resubscribe' );
+		if ( ! empty( $allow_resubscribe ) && 'yes' === $allow_resubscribe ) {
+			$subscriber['resubscribe'] = true;
+		}
 
 		return $subscriber;
 	}
@@ -252,7 +269,7 @@ class Mailerlite extends Integration_Base {
 			},
 			'fields' => [
 				self::OPTION_NAME_API_KEY => [
-					'label' => __( 'API KEY', 'elementor-pro' ),
+					'label' => __( 'API Key', 'elementor-pro' ),
 					'field_args' => [
 						'type' => 'text',
 						'desc' => sprintf( __( 'To integrate with our forms you need an <a href="%s" target="_blank">API Key</a>.', 'elementor-pro' ), 'https://help.mailerlite.com/article/show/35040-where-can-i-find-the-api-key' ),

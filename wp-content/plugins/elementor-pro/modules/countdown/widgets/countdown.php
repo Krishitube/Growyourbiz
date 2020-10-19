@@ -2,10 +2,10 @@
 namespace ElementorPro\Modules\Countdown\Widgets;
 
 use Elementor\Controls_Manager;
+use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
+use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
 use Elementor\Group_Control_Border;
 use Elementor\Group_Control_Typography;
-use Elementor\Scheme_Color;
-use Elementor\Scheme_Typography;
 use Elementor\Utils;
 use ElementorPro\Base\Base_Widget;
 use ElementorPro\Plugin;
@@ -58,7 +58,7 @@ class Countdown extends Base_Widget {
 			[
 				'label' => __( 'Due Date', 'elementor-pro' ),
 				'type' => Controls_Manager::DATE_TIME,
-				'default' => date( 'Y-m-d H:i', strtotime( '+1 month' ) + ( get_option( 'gmt_offset' ) * HOUR_IN_SECONDS ) ),
+				'default' => gmdate( 'Y-m-d H:i', strtotime( '+1 month' ) + ( get_option( 'gmt_offset' ) * HOUR_IN_SECONDS ) ),
 				/* translators: %s: Time zone. */
 				'description' => sprintf( __( 'Date set according to your timezone: %s.', 'elementor-pro' ), Utils::get_timezone_string() ),
 				'condition' => [
@@ -256,7 +256,6 @@ class Countdown extends Base_Widget {
 			[
 				'label' => __( 'Message', 'elementor-pro' ),
 				'type' => Controls_Manager::TEXTAREA,
-				'label_block' => true,
 				'separator' => 'before',
 				'dynamic' => [
 					'active' => true,
@@ -272,9 +271,8 @@ class Countdown extends Base_Widget {
 			[
 				'label' => __( 'Redirect URL', 'elementor-pro' ),
 				'type' => Controls_Manager::URL,
-				'label_block' => true,
 				'separator' => 'before',
-				'show_external' => false,
+				'options' => false,
 				'dynamic' => [
 					'active' => true,
 				],
@@ -331,9 +329,8 @@ class Countdown extends Base_Widget {
 			[
 				'label' => __( 'Background Color', 'elementor-pro' ),
 				'type' => Controls_Manager::COLOR,
-				'scheme' => [
-					'type' => Scheme_Color::get_type(),
-					'value' => Scheme_Color::COLOR_1,
+				'global' => [
+					'default' => Global_Colors::COLOR_PRIMARY,
 				],
 				'selectors' => [
 					'{{WRAPPER}} .elementor-countdown-item' => 'background-color: {{VALUE}};',
@@ -431,7 +428,9 @@ class Countdown extends Base_Widget {
 			[
 				'name' => 'digits_typography',
 				'selector' => '{{WRAPPER}} .elementor-countdown-digits',
-				'scheme' => Scheme_Typography::TYPOGRAPHY_3,
+				'global' => [
+					'default' => Global_Typography::TYPOGRAPHY_TEXT,
+				],
 			]
 		);
 
@@ -460,7 +459,9 @@ class Countdown extends Base_Widget {
 			[
 				'name' => 'label_typography',
 				'selector' => '{{WRAPPER}} .elementor-countdown-label',
-				'scheme' => Scheme_Typography::TYPOGRAPHY_2,
+				'global' => [
+					'default' => Global_Typography::TYPOGRAPHY_SECONDARY,
+				],
 			]
 		);
 
@@ -482,19 +483,18 @@ class Countdown extends Base_Widget {
 			[
 				'label' => __( 'Alignment', 'elementor-pro' ),
 				'type' => Controls_Manager::CHOOSE,
-				'label_block' => false,
 				'options' => [
 					'left' => [
 						'title' => __( 'Left', 'elementor-pro' ),
-						'icon' => 'fa fa-align-left',
+						'icon' => 'eicon-text-align-left',
 					],
 					'center' => [
 						'title' => __( 'Center', 'elementor-pro' ),
-						'icon' => 'fa fa-align-center',
+						'icon' => 'eicon-text-align-center',
 					],
 					'right' => [
 						'title' => __( 'Right', 'elementor-pro' ),
-						'icon' => 'fa fa-align-right',
+						'icon' => 'eicon-text-align-right',
 					],
 				],
 				'selectors' => [
@@ -512,9 +512,8 @@ class Countdown extends Base_Widget {
 				'selectors' => [
 					'{{WRAPPER}} .elementor-countdown-expire--message' => 'color: {{VALUE}};',
 				],
-				'scheme' => [
-					'type' => Scheme_Color::get_type(),
-					'value' => Scheme_Color::COLOR_3,
+				'global' => [
+					'default' => Global_Colors::COLOR_TEXT,
 				],
 			]
 		);
@@ -523,7 +522,9 @@ class Countdown extends Base_Widget {
 			Group_Control_Typography::get_type(),
 			[
 				'name' => 'typography',
-				'scheme' => Scheme_Typography::TYPOGRAPHY_3,
+				'global' => [
+					'default' => Global_Typography::TYPOGRAPHY_TEXT,
+				],
 				'selector' => '{{WRAPPER}} .elementor-countdown-expire--message',
 			]
 		);

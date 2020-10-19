@@ -6,9 +6,6 @@ use Elementor\Controls_Stack;
 use Elementor\Core\DynamicTags\Dynamic_CSS;
 use Elementor\Core\Files\CSS\Post;
 use Elementor\Element_Base;
-use Elementor\Element_Column;
-use Elementor\Element_Section;
-use Elementor\Widget_Base;
 use ElementorPro\Base\Module_Base;
 use ElementorPro\Plugin;
 
@@ -85,7 +82,7 @@ class Module extends Module_Base {
 		$custom_css = str_replace( 'selector', $document->get_css_wrapper_selector(), $custom_css );
 
 		// Add a css comment
-		$custom_css = '/* Start custom CSS for page-settings */' . $custom_css . '/* End custom CSS */';
+		$custom_css = '/* Start custom CSS */' . $custom_css . '/* End custom CSS */';
 
 		$post_css->get_stylesheet()->add_raw_css( $custom_css );
 	}
@@ -138,9 +135,17 @@ class Module extends Module_Base {
 		$controls_stack->end_controls_section();
 	}
 
+	public function localize_settings( array $settings ) {
+		$settings['i18n']['custom_css'] = __( 'Custom CSS', 'elementor-pro' );
+
+		return $settings;
+	}
+
 	protected function add_actions() {
 		add_action( 'elementor/element/after_section_end', [ $this, 'register_controls' ], 10, 2 );
 		add_action( 'elementor/element/parse_css', [ $this, 'add_post_css' ], 10, 2 );
-		add_action( 'elementor/post-css-file/parse', [ $this, 'add_page_settings_css' ] );
+		add_action( 'elementor/css-file/post/parse', [ $this, 'add_page_settings_css' ] );
+
+		add_filter( 'elementor_pro/editor/localize_settings', [ $this, 'localize_settings' ] );
 	}
 }

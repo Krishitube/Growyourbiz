@@ -2,11 +2,10 @@
 namespace ElementorPro\Modules\Carousel\Widgets;
 
 use Elementor\Controls_Manager;
-use Elementor\Group_Control_Box_Shadow;
+use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
 use Elementor\Group_Control_Typography;
+use Elementor\Icons_Manager;
 use Elementor\Repeater;
-use Elementor\Scheme_Color;
-use Elementor\Scheme_Typography;
 use Elementor\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -173,7 +172,9 @@ class Reviews extends Base {
 			[
 				'name' => 'name_typography',
 				'selector' => '{{WRAPPER}} .elementor-testimonial__header, {{WRAPPER}} .elementor-testimonial__name',
-				'scheme' => Scheme_Typography::TYPOGRAPHY_1,
+				'global' => [
+					'default' => Global_Typography::TYPOGRAPHY_PRIMARY,
+				],
 			]
 		);
 
@@ -230,7 +231,9 @@ class Reviews extends Base {
 			[
 				'name' => 'content_typography',
 				'selector' => '{{WRAPPER}} .elementor-testimonial__text',
-				'scheme' => Scheme_Typography::TYPOGRAPHY_3,
+				'global' => [
+					'default' => Global_Typography::TYPOGRAPHY_TEXT,
+				],
 			]
 		);
 
@@ -307,7 +310,7 @@ class Reviews extends Base {
 				'type' => Controls_Manager::SELECT,
 				'default' => 'default',
 				'options' => [
-					'default' => __( 'Official Color', 'elementor-pro' ),
+					'default' => __( 'Official', 'elementor-pro' ),
 					'custom' => __( 'Custom', 'elementor-pro' ),
 				],
 			]
@@ -323,6 +326,7 @@ class Reviews extends Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .elementor-testimonial__icon:not(.elementor-testimonial__rating)' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .elementor-testimonial__icon:not(.elementor-testimonial__rating) svg' => 'fill: {{VALUE}};',
 				],
 			]
 		);
@@ -340,6 +344,7 @@ class Reviews extends Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}} .elementor-testimonial__icon' => 'font-size: {{SIZE}}{{UNIT}}',
+					'{{WRAPPER}} .elementor-testimonial__icon svg' => 'width: {{SIZE}}{{UNIT}}',
 				],
 			]
 		);
@@ -375,15 +380,14 @@ class Reviews extends Base {
 			[
 				'label' => __( 'Unmarked Style', 'elementor-pro' ),
 				'type' => Controls_Manager::CHOOSE,
-				'label_block' => false,
 				'options' => [
 					'solid' => [
 						'title' => __( 'Solid', 'elementor-pro' ),
-						'icon' => 'fa fa-star',
+						'icon' => 'eicon-star',
 					],
 					'outline' => [
 						'title' => __( 'Outline', 'elementor-pro' ),
-						'icon' => 'fa fa-star-o',
+						'icon' => 'eicon-star-o',
 					],
 				],
 				'default' => 'solid',
@@ -524,64 +528,71 @@ class Reviews extends Base {
 		);
 
 		$repeater->add_control(
-			'social_icon',
+			'selected_social_icon',
 			[
 				'label' => __( 'Icon', 'elementor-pro' ),
-				'type' => Controls_Manager::ICON,
-				'label_block' => true,
-				'default' => 'fa fa-twitter',
-				'include' => [
-					'fa fa-android',
-					'fa fa-apple',
-					'fa fa-behance',
-					'fa fa-bitbucket',
-					'fa fa-codepen',
-					'fa fa-delicious',
-					'fa fa-digg',
-					'fa fa-dribbble',
-					'fa fa-envelope',
-					'fa fa-facebook',
-					'fa fa-flickr',
-					'fa fa-foursquare',
-					'fa fa-github',
-					'fa fa-google-plus',
-					'fa fa-houzz',
-					'fa fa-instagram',
-					'fa fa-jsfiddle',
-					'fa fa-linkedin',
-					'fa fa-medium',
-					'fa fa-meetup',
-					'fa fa-mixcloud',
-					'fa fa-odnoklassniki',
-					'fa fa-pinterest',
-					'fa fa-product-hunt',
-					'fa fa-reddit',
-					'fa fa-rss',
-					'fa fa-shopping-cart',
-					'fa fa-skype',
-					'fa fa-slideshare',
-					'fa fa-snapchat',
-					'fa fa-soundcloud',
-					'fa fa-spotify',
-					'fa fa-stack-overflow',
-					'fa fa-steam',
-					'fa fa-stumbleupon',
-					'fa fa-telegram',
-					'fa fa-thumb-tack',
-					'fa fa-tripadvisor',
-					'fa fa-tumblr',
-					'fa fa-twitch',
-					'fa fa-twitter',
-					'fa fa-vimeo',
-					'fa fa-vk',
-					'fa fa-weibo',
-					'fa fa-weixin',
-					'fa fa-whatsapp',
-					'fa fa-wordpress',
-					'fa fa-xing',
-					'fa fa-yelp',
-					'fa fa-youtube',
-					'fa fa-500px',
+				'type' => Controls_Manager::ICONS,
+				'fa4compatibility' => 'social_icon',
+				'default' => [
+					'value' => 'fab fa-twitter',
+					'library' => 'fa-brands',
+				],
+				'recommended' => [
+					'fa-solid' => [
+						'rss',
+						'shopping-cart',
+						'thumbtack',
+					],
+					'fa-brands' => [
+						'android',
+						'apple',
+						'behance',
+						'bitbucket',
+						'codepen',
+						'delicious',
+						'digg',
+						'dribbble',
+						'envelope',
+						'facebook',
+						'flickr',
+						'foursquare',
+						'github',
+						'google-plus',
+						'houzz',
+						'instagram',
+						'jsfiddle',
+						'linkedin',
+						'medium',
+						'meetup',
+						'mix',
+						'mixcloud',
+						'odnoklassniki',
+						'pinterest',
+						'product-hunt',
+						'reddit',
+						'skype',
+						'slideshare',
+						'snapchat',
+						'soundcloud',
+						'spotify',
+						'stack-overflow',
+						'steam',
+						'telegram',
+						'tripadvisor',
+						'tumblr',
+						'twitch',
+						'twitter',
+						'vimeo',
+						'fa-vk',
+						'weibo',
+						'weixin',
+						'whatsapp',
+						'wordpress',
+						'xing',
+						'yelp',
+						'youtube',
+						'500px',
+					],
 				],
 			]
 		);
@@ -604,7 +615,7 @@ class Reviews extends Base {
 			[
 				'label' => __( 'Review', 'elementor-pro' ),
 				'type' => Controls_Manager::TEXTAREA,
-				'default' => __( 'I am slide content. Click edit button to change this text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor-pro' ),
+				'default' => __( 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor-pro' ),
 			]
 		);
 	}
@@ -614,7 +625,7 @@ class Reviews extends Base {
 
 		return [
 			[
-				'content' => __( 'I am slide content. Click edit button to change this text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor-pro' ),
+				'content' => __( 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor-pro' ),
 				'name' => __( 'John Doe', 'elementor-pro' ),
 				'title' => '@username',
 				'image' => [
@@ -622,7 +633,7 @@ class Reviews extends Base {
 				],
 			],
 			[
-				'content' => __( 'I am slide content. Click edit button to change this text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor-pro' ),
+				'content' => __( 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor-pro' ),
 				'name' => __( 'John Doe', 'elementor-pro' ),
 				'title' => '@username',
 				'image' => [
@@ -630,7 +641,7 @@ class Reviews extends Base {
 				],
 			],
 			[
-				'content' => __( 'I am slide content. Click edit button to change this text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor-pro' ),
+				'content' => __( 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor-pro' ),
 				'name' => __( 'John Doe', 'elementor-pro' ),
 				'title' => '@username',
 				'image' => [
@@ -664,11 +675,11 @@ class Reviews extends Base {
 	}
 
 	protected function render_stars( $slide, $settings ) {
-		$icon = '&#61445;';
+		$icon = '&#xE934;';
 
 		if ( 'star_fontawesome' === $settings['star_style'] ) {
 			if ( 'outline' === $settings['unmarked_star_style'] ) {
-				$icon = '&#61446;';
+				$icon = '&#xE933;';
 			}
 		} elseif ( 'star_unicode' === $settings['star_style'] ) {
 			$icon = '&#9733;';
@@ -696,14 +707,47 @@ class Reviews extends Base {
 	}
 
 	private function print_icon( $slide, $element_key ) {
-		if ( empty( $slide['social_icon'] ) ) {
+		$migration_allowed = Icons_Manager::is_migration_allowed();
+		if ( ! isset( $slide['social_icon'] ) && ! $migration_allowed ) {
+			// add old default
+			$slide['social_icon'] = 'fa fa-twitter';
+		}
+
+		if ( empty( $slide['social_icon'] ) && empty( $slide['selected_social_icon'] ) ) {
 			return '';
+		}
+
+		$migrated = isset( $slide['__fa4_migrated']['selected_social_icon'] );
+		$is_new = empty( $slide['social_icon'] ) && $migration_allowed;
+		$social = '';
+
+		if ( $is_new || $migrated ) {
+			ob_start();
+			Icons_Manager::render_icon( $slide['selected_social_icon'], [ 'aria-hidden' => 'true' ] );
+			$icon = ob_get_clean();
+		} else {
+			$icon = '<i class="' . esc_attr( $slide['social_icon'] ) . '" aria-hidden="true"></i>';
+		}
+
+		if ( ! empty( $slide['social_icon'] ) ) {
+			$social = str_replace( 'fa fa-', '', $slide['social_icon'] );
+		}
+
+		if ( ( $is_new || $migrated ) && 'svg' !== $slide['selected_social_icon']['library'] ) {
+			$social = explode( ' ', $slide['selected_social_icon']['value'], 2 );
+			if ( empty( $social[1] ) ) {
+				$social = '';
+			} else {
+				$social = str_replace( 'fa-', '', $social[1] );
+			}
+		}
+		if ( 'svg' === $slide['selected_social_icon']['library'] ) {
+			$social = '';
 		}
 
 		$this->add_render_attribute( 'icon_wrapper_' . $element_key, 'class', 'elementor-testimonial__icon elementor-icon' );
 
-		$icon = '<i class="' . $slide['social_icon'] . '" aria-hidden="true"></i><span class="elementor-screen-only">' . esc_html__( 'Read More', 'elementor-pro' ) . '</span>';
-		$social = str_replace( 'fa fa-', '', $slide['social_icon'] );
+		$icon .= '<span class="elementor-screen-only">' . esc_html__( 'Read More', 'elementor-pro' ) . '</span>';
 		$this->add_render_attribute( 'icon_wrapper_' . $element_key, 'class', 'elementor-icon-' . $social );
 
 		return '<div ' . $this->get_render_attribute_string( 'icon_wrapper_' . $element_key ) . '>' . $icon . '</div>';
@@ -736,15 +780,7 @@ class Reviews extends Base {
 				$this->add_render_attribute( $header_element, 'class', 'elementor-testimonial__header' );
 
 				if ( ! empty( $link_url ) ) {
-					$this->add_render_attribute( $header_element, 'href', $link_url );
-
-					if ( $slide['link']['is_external'] ) {
-						$this->add_render_attribute( $header_element, 'target', '_blank' );
-					}
-
-					if ( ! empty( $slide['link']['nofollow'] ) ) {
-						$this->add_render_attribute( $header_element, 'rel', 'nofollow' );
-					}
+					$this->add_link_attributes( $header_element, $slide['link'] );
 				}
 				?>
 				<<?php echo $header_tag; ?> <?php echo $this->get_render_attribute_string( $header_element ); ?>>

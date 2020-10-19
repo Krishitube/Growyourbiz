@@ -1,10 +1,15 @@
 <?php
 namespace ElementorPro;
 
+use ElementorPro\Core\Admin\Admin;
+use ElementorPro\Core\App\App;
 use ElementorPro\Core\Connect;
 use Elementor\Core\Responsive\Files\Frontend as FrontendFile;
 use Elementor\Core\Responsive\Responsive;
 use Elementor\Utils;
+use ElementorPro\Core\Editor\Editor;
+use ElementorPro\Core\Modules_Manager;
+use ElementorPro\Core\Preview\Preview;
 use ElementorPro\Core\Upgrade\Manager as UpgradeManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -22,7 +27,7 @@ class Plugin {
 	private static $_instance;
 
 	/**
-	 * @var Manager
+	 * @var Modules_Manager
 	 */
 	public $modules_manager;
 
@@ -31,20 +36,36 @@ class Plugin {
 	 */
 	public $upgrade;
 
+	/**
+	 * @var Editor
+	 */
+	public $editor;
+
+	/**
+	 * @var Preview
+	 */
+	public $preview;
+
+	/**
+	 * @var Admin
+	 */
+	public $admin;
+
+	/**
+	 * @var App
+	 */
+	public $app;
+
+	/**
+	 * @var License\Admin
+	 */
+	public $license_admin;
+
 	private $classes_aliases = [
 		'ElementorPro\Modules\PanelPostsControl\Module' => 'ElementorPro\Modules\QueryControl\Module',
 		'ElementorPro\Modules\PanelPostsControl\Controls\Group_Control_Posts' => 'ElementorPro\Modules\QueryControl\Controls\Group_Control_Posts',
 		'ElementorPro\Modules\PanelPostsControl\Controls\Query' => 'ElementorPro\Modules\QueryControl\Controls\Query',
 	];
-
-	/**
-	 * @deprecated
-	 *
-	 * @return string
-	 */
-	public function get_version() {
-		return ELEMENTOR_PRO_VERSION;
-	}
 
 	/**
 	 * Throw error on object clone
@@ -88,14 +109,6 @@ class Plugin {
 		}
 
 		return self::$_instance;
-	}
-
-	private function includes() {
-		require ELEMENTOR_PRO_PATH . 'includes/modules-manager.php';
-
-		if ( is_admin() ) {
-			require ELEMENTOR_PRO_PATH . 'includes/admin.php';
-		}
 	}
 
 	public function autoload( $class ) {
@@ -194,62 +207,9 @@ class Plugin {
 		 */
 		$locale_settings = apply_filters( 'elementor_pro/frontend/localize_settings', $locale_settings );
 
-		wp_localize_script(
+		Utils::print_js_config(
 			'elementor-pro-frontend',
 			'ElementorProFrontendConfig',
-			$locale_settings
-		);
-	}
-
-	public function enqueue_editor_scripts() {
-		$suffix = Utils::is_script_debug() ? '' : '.min';
-
-		wp_enqueue_script(
-			'elementor-pro',
-			ELEMENTOR_PRO_URL . 'assets/js/editor' . $suffix . '.js',
-			[
-				'backbone-marionette',
-				'elementor-common-modules',
-				'elementor-editor-modules',
-			],
-			ELEMENTOR_PRO_VERSION,
-			true
-		);
-
-		$is_license_active = false;
-
-		$license_key = License\Admin::get_license_key();
-
-		if ( ! empty( $license_key ) ) {
-			$license_data = License\API::get_license_data();
-
-			if ( ! empty( $license_data['license'] ) && License\API::STATUS_VALID === $license_data['license'] ) {
-				$is_license_active = true;
-			}
-		}
-
-		$locale_settings = [
-			'i18n' => [],
-			'isActive' => true,
-			'urls' => [
-				'modules' => ELEMENTOR_PRO_MODULES_URL,
-			],
-		];
-
-		/**
-		 * Localize editor settings.
-		 *
-		 * Filters the editor localized settings.
-		 *
-		 * @since 1.0.0
-		 *
-		 * @param array $locale_settings Localized settings.
-		 */
-		$locale_settings = apply_filters( 'elementor_pro/editor/localize_settings', $locale_settings );
-
-		wp_localize_script(
-			'elementor-pro',
-			'ElementorProConfig',
 			$locale_settings
 		);
 	}
@@ -268,16 +228,6 @@ class Plugin {
 		);
 
 		wp_register_script(
-			'social-share',
-			ELEMENTOR_PRO_URL . 'assets/lib/social-share/social-share' . $suffix . '.js',
-			[
-				'jquery',
-			],
-			'0.2.17',
-			true
-		);
-
-		wp_register_script(
 			'elementor-sticky',
 			ELEMENTOR_PRO_URL . 'assets/lib/sticky/jquery.sticky' . $suffix . '.js',
 			[
@@ -288,18 +238,17 @@ class Plugin {
 		);
 	}
 
-	public function enqueue_editor_styles() {
+	public function register_preview_scripts() {
 		$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
-		$direction_suffix = is_rtl() ? '-rtl' : '';
-
-		wp_enqueue_style(
-			'elementor-pro',
-			ELEMENTOR_PRO_URL . 'assets/css/editor' . $direction_suffix . $suffix . '.css',
+		wp_enqueue_script(
+			'elementor-pro-preview',
+			ELEMENTOR_PRO_URL . 'assets/js/preview' . $suffix . '.js',
 			[
-				'elementor-editor',
+				'elementor-frontend',
 			],
-			ELEMENTOR_PRO_VERSION
+			ELEMENTOR_PRO_VERSION,
+			true
 		);
 	}
 
@@ -316,7 +265,7 @@ class Plugin {
 	}
 
 	public function on_elementor_init() {
-		$this->modules_manager = new Manager();
+		$this->modules_manager = new Modules_Manager();
 
 		/** TODO: BC for Elementor v2.4.0 */
 		if ( class_exists( '\Elementor\Core\Upgrade\Manager' ) ) {
@@ -334,8 +283,11 @@ class Plugin {
 		do_action( 'elementor_pro/init' );
 	}
 
-	public function on_elementor_editor_init() {
-		self::elementor()->common->add_template( __DIR__ . '/includes/templates/editor.php' );
+	/**
+	 * @param \Elementor\Core\Base\Document $document
+	 */
+	public function on_document_save_version( $document ) {
+		$document->update_meta( '_elementor_pro_version', ELEMENTOR_PRO_VERSION );
 	}
 
 	private function get_responsive_templates_path() {
@@ -344,17 +296,15 @@ class Plugin {
 
 	private function setup_hooks() {
 		add_action( 'elementor/init', [ $this, 'on_elementor_init' ] );
-		add_action( 'elementor/editor/init', [ $this, 'on_elementor_editor_init' ] );
 
 		add_action( 'elementor/frontend/before_register_scripts', [ $this, 'register_frontend_scripts' ] );
-
-		add_action( 'elementor/editor/after_enqueue_styles', [ $this, 'enqueue_editor_styles' ] );
-		add_action( 'elementor/editor/before_enqueue_scripts', [ $this, 'enqueue_editor_scripts' ] );
+		add_action( 'elementor/preview/enqueue_scripts', [ $this, 'register_preview_scripts' ] );
 
 		add_action( 'elementor/frontend/before_enqueue_scripts', [ $this, 'enqueue_frontend_scripts' ] );
 		add_action( 'elementor/frontend/after_enqueue_styles', [ $this, 'enqueue_styles' ] );
 
 		add_filter( 'elementor/core/responsive/get_stylesheet_templates', [ $this, 'get_responsive_stylesheet_templates' ] );
+		add_action( 'elementor/document/save_version', [ $this, 'on_document_save_version' ] );
 	}
 
 	/**
@@ -363,16 +313,24 @@ class Plugin {
 	private function __construct() {
 		spl_autoload_register( [ $this, 'autoload' ] );
 
-		$this->includes();
-
 		new Connect\Manager();
 
 		$this->setup_hooks();
 
+		$this->editor = new Editor();
+
+		$this->preview = new Preview();
+
+		$this->app = new App();
+
 		if ( is_admin() ) {
-			new Admin();
-			new License\Admin();
+			$this->admin = new Admin();
+			$this->license_admin = new License\Admin();
 		}
+	}
+
+	final public static function get_title() {
+		return __( 'Elementor Pro', 'elementor-pro' );
 	}
 }
 

@@ -2,7 +2,7 @@
 namespace ElementorPro\Modules\DynamicTags\Tags;
 
 use Elementor\Controls_Manager;
-use Elementor\Core\DynamicTags\Tag;
+use ElementorPro\Modules\DynamicTags\Tags\Base\Tag;
 use ElementorPro\Modules\DynamicTags\Module;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -78,7 +78,6 @@ class Contact_URL extends Tag {
 			[
 				'label' => __( 'Message', 'elementor-pro' ),
 				'type' => Controls_Manager::TEXTAREA,
-				'label_block' => 'true',
 				'condition' => [
 					'link_type' => 'email',
 				],
@@ -303,15 +302,17 @@ class Contact_URL extends Tag {
 
 	private function date_to_iso( $date, $all_day = false ) {
 		$time = strtotime( $date );
+
 		if ( $all_day ) {
-			return date( 'Ymd\/Ymd', $time );
+			return gmdate( 'Ymd\/Ymd', $time );
 		}
-		return date( 'Ymd\THis', $time );
+
+		return gmdate( 'Ymd\THis', $time );
 	}
 
 	private function date_to_ics( $date ) {
 		$time = strtotime( $date );
-		return date( 'Y-m-d\Th:i:s', $time );
+		return gmdate( 'Y-m-d\Th:i:s', $time );
 	}
 
 	private function escape_space_in_url( $url ) {
@@ -327,7 +328,7 @@ class Contact_URL extends Tag {
 				$dates = $this->date_to_iso( $settings['event_start_date'] ) . '/' . $this->date_to_iso( $settings['event_end_date'] );
 			}
 		}
-		$link = 'http://www.google.com/calendar/render?action=TEMPLATE&';
+		$link = 'https://www.google.com/calendar/render?action=TEMPLATE&';
 		$build_parts = [
 			'text' => empty( $settings['event_title'] ) ? '' : $this->escape_space_in_url( $settings['event_title'] ),
 			'details' => empty( $settings['event_description'] ) ? '' : $this->escape_space_in_url( $settings['event_description'] ),
@@ -373,11 +374,11 @@ class Contact_URL extends Tag {
 		];
 
 		if ( ! empty( $settings['event_start_date'] ) ) {
-			$build_parts['st'] = urlencode( date( 'Ymd\This', strtotime( $settings['event_start_date'] ) ) );
+			$build_parts['st'] = urlencode( gmdate( 'Ymd\This', strtotime( $settings['event_start_date'] ) ) );
 		}
 
 		if ( ! empty( $settings['event_end_date'] ) ) {
-			$build_parts['et'] = urlencode( date( 'Ymd\This', strtotime( $settings['event_end_date'] ) ) );
+			$build_parts['et'] = urlencode( gmdate( 'Ymd\This', strtotime( $settings['event_end_date'] ) ) );
 		}
 
 		return add_query_arg( $build_parts, $link );

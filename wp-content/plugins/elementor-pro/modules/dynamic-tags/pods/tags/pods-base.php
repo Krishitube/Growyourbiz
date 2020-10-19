@@ -2,7 +2,7 @@
 namespace ElementorPro\Modules\DynamicTags\Pods\Tags;
 
 use Elementor\Controls_Manager;
-use Elementor\Core\DynamicTags\Tag;
+use ElementorPro\Modules\DynamicTags\Tags\Base\Tag;
 use ElementorPro\Modules\DynamicTags\Pods\Module;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -26,6 +26,10 @@ abstract class Pods_Base extends Tag {
 		 * @var \Pods
 		 */
 		$pod = pods( $pod_name, get_the_ID() );
+
+		if ( false === $pod ) {
+			return [];
+		}
 
 		return [
 			'field' => $pod->fields[ $meta_key ],
