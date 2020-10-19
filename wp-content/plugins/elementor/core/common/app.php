@@ -58,9 +58,9 @@ class App extends BaseApp {
 			if ( ! is_customize_preview() ) {
 				$this->add_component( 'finder', new Finder() );
 			}
-		}
 
-		$this->add_component( 'connect', new Connect() );
+			$this->add_component( 'connect', new Connect() );
+		}
 	}
 
 	/**
@@ -88,7 +88,7 @@ class App extends BaseApp {
 	public function register_scripts() {
 		wp_register_script(
 			'elementor-common-modules',
-			$this->get_js_assets_url( 'common-modules' ),
+			ELEMENTOR_ASSETS_URL . 'js/common-modules.js',
 			[],
 			ELEMENTOR_VERSION,
 			true
@@ -120,7 +120,7 @@ class App extends BaseApp {
 			[
 				'jquery-ui-position',
 			],
-			'4.8.1',
+			'4.7.1',
 			true
 		);
 
@@ -134,16 +134,12 @@ class App extends BaseApp {
 				'backbone-radio',
 				'elementor-common-modules',
 				'elementor-dialog',
-				'wp-api-request',
 			],
 			ELEMENTOR_VERSION,
 			true
 		);
 
 		$this->print_config();
-
-		// Used for external plugins.
-		do_action( 'elementor/common/after_register_scripts', $this );
 	}
 
 	/**
@@ -159,7 +155,7 @@ class App extends BaseApp {
 			'elementor-icons',
 			$this->get_css_assets_url( 'elementor-icons', 'assets/lib/eicons/css/' ),
 			[],
-			'5.9.1'
+			'4.3.0'
 		);
 
 		wp_enqueue_style(
@@ -223,12 +219,9 @@ class App extends BaseApp {
 		return [
 			'version' => ELEMENTOR_VERSION,
 			'isRTL' => is_rtl(),
-			'isDebug' => ( defined( 'WP_DEBUG' ) && WP_DEBUG ),
-			'isElementorDebug' => ( defined( 'ELEMENTOR_DEBUG' ) && ELEMENTOR_DEBUG ),
 			'activeModules' => array_keys( $this->get_components() ),
 			'urls' => [
 				'assets' => ELEMENTOR_ASSETS_URL,
-				'rest' => get_rest_url(),
 			],
 		];
 	}

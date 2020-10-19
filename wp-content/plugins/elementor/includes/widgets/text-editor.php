@@ -5,9 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
-use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
-
 /**
  * Elementor text editor widget.
  *
@@ -57,7 +54,7 @@ class Widget_Text_Editor extends Widget_Base {
 	 * @return string Widget icon.
 	 */
 	public function get_icon() {
-		return 'eicon-text';
+		return 'eicon-align-left';
 	}
 
 	/**
@@ -111,7 +108,10 @@ class Widget_Text_Editor extends Widget_Base {
 			[
 				'label' => '',
 				'type' => Controls_Manager::WYSIWYG,
-				'default' => '<p>' . __( 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor' ) . '</p>',
+				'dynamic' => [
+					'active' => true,
+				],
+				'default' => __( 'Click edit button to change this text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor' ),
 			]
 		);
 
@@ -126,6 +126,69 @@ class Widget_Text_Editor extends Widget_Base {
 			]
 		);
 
+		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'section_style',
+			[
+				'label' => __( 'Text Editor', 'elementor' ),
+				'tab' => Controls_Manager::TAB_STYLE,
+			]
+		);
+
+		$this->add_responsive_control(
+			'align',
+			[
+				'label' => __( 'Alignment', 'elementor' ),
+				'type' => Controls_Manager::CHOOSE,
+				'options' => [
+					'left' => [
+						'title' => __( 'Left', 'elementor' ),
+						'icon' => 'fa fa-align-left',
+					],
+					'center' => [
+						'title' => __( 'Center', 'elementor' ),
+						'icon' => 'fa fa-align-center',
+					],
+					'right' => [
+						'title' => __( 'Right', 'elementor' ),
+						'icon' => 'fa fa-align-right',
+					],
+					'justify' => [
+						'title' => __( 'Justified', 'elementor' ),
+						'icon' => 'fa fa-align-justify',
+					],
+				],
+				'selectors' => [
+					'{{WRAPPER}} .elementor-text-editor' => 'text-align: {{VALUE}};',
+				],
+			]
+		);
+
+		$this->add_control(
+			'text_color',
+			[
+				'label' => __( 'Text Color', 'elementor' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '',
+				'selectors' => [
+					'{{WRAPPER}}' => 'color: {{VALUE}};',
+				],
+				'scheme' => [
+					'type' => Scheme_Color::get_type(),
+					'value' => Scheme_Color::COLOR_3,
+				],
+			]
+		);
+
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			[
+				'name' => 'typography',
+				'scheme' => Scheme_Typography::TYPOGRAPHY_3,
+			]
+		);
+
 		$text_columns = range( 1, 10 );
 		$text_columns = array_combine( $text_columns, $text_columns );
 		$text_columns[''] = __( 'Default', 'elementor' );
@@ -135,7 +198,6 @@ class Widget_Text_Editor extends Widget_Base {
 			[
 				'label' => __( 'Columns', 'elementor' ),
 				'type' => Controls_Manager::SELECT,
-				'separator' => 'before',
 				'options' => $text_columns,
 				'selectors' => [
 					'{{WRAPPER}} .elementor-text-editor' => 'columns: {{VALUE}};',
@@ -175,70 +237,6 @@ class Widget_Text_Editor extends Widget_Base {
 		$this->end_controls_section();
 
 		$this->start_controls_section(
-			'section_style',
-			[
-				'label' => __( 'Text Editor', 'elementor' ),
-				'tab' => Controls_Manager::TAB_STYLE,
-			]
-		);
-
-		$this->add_responsive_control(
-			'align',
-			[
-				'label' => __( 'Alignment', 'elementor' ),
-				'type' => Controls_Manager::CHOOSE,
-				'options' => [
-					'left' => [
-						'title' => __( 'Left', 'elementor' ),
-						'icon' => 'eicon-text-align-left',
-					],
-					'center' => [
-						'title' => __( 'Center', 'elementor' ),
-						'icon' => 'eicon-text-align-center',
-					],
-					'right' => [
-						'title' => __( 'Right', 'elementor' ),
-						'icon' => 'eicon-text-align-right',
-					],
-					'justify' => [
-						'title' => __( 'Justified', 'elementor' ),
-						'icon' => 'eicon-text-align-justify',
-					],
-				],
-				'selectors' => [
-					'{{WRAPPER}} .elementor-text-editor' => 'text-align: {{VALUE}};',
-				],
-			]
-		);
-
-		$this->add_control(
-			'text_color',
-			[
-				'label' => __( 'Text Color', 'elementor' ),
-				'type' => Controls_Manager::COLOR,
-				'default' => '',
-				'selectors' => [
-					'{{WRAPPER}}' => 'color: {{VALUE}};',
-				],
-				'global' => [
-					'default' => Global_Colors::COLOR_TEXT,
-				],
-			]
-		);
-
-		$this->add_group_control(
-			Group_Control_Typography::get_type(),
-			[
-				'name' => 'typography',
-				'global' => [
-					'default' => Global_Typography::TYPOGRAPHY_TEXT,
-				],
-			]
-		);
-
-		$this->end_controls_section();
-
-		$this->start_controls_section(
 			'section_drop_cap',
 			[
 				'label' => __( 'Drop Cap', 'elementor' ),
@@ -261,6 +259,9 @@ class Widget_Text_Editor extends Widget_Base {
 				],
 				'default' => 'default',
 				'prefix_class' => 'elementor-drop-cap-view-',
+				'condition' => [
+					'drop_cap' => 'yes',
+				],
 			]
 		);
 
@@ -273,8 +274,12 @@ class Widget_Text_Editor extends Widget_Base {
 					'{{WRAPPER}}.elementor-drop-cap-view-stacked .elementor-drop-cap' => 'background-color: {{VALUE}};',
 					'{{WRAPPER}}.elementor-drop-cap-view-framed .elementor-drop-cap, {{WRAPPER}}.elementor-drop-cap-view-default .elementor-drop-cap' => 'color: {{VALUE}}; border-color: {{VALUE}};',
 				],
-				'global' => [
-					'default' => Global_Colors::COLOR_PRIMARY,
+				'scheme' => [
+					'type' => Scheme_Color::get_type(),
+					'value' => Scheme_Color::COLOR_1,
+				],
+				'condition' => [
+					'drop_cap' => 'yes',
 				],
 			]
 		);
@@ -377,6 +382,9 @@ class Widget_Text_Editor extends Widget_Base {
 				'exclude' => [
 					'letter_spacing',
 				],
+				'condition' => [
+					'drop_cap' => 'yes',
+				],
 			]
 		);
 
@@ -422,10 +430,10 @@ class Widget_Text_Editor extends Widget_Base {
 	 *
 	 * Written as a Backbone JavaScript template and used to generate the live preview.
 	 *
-	 * @since 2.9.0
+	 * @since 1.0.0
 	 * @access protected
 	 */
-	protected function content_template() {
+	protected function _content_template() {
 		?>
 		<#
 		view.addRenderAttribute( 'editor', 'class', [ 'elementor-text-editor', 'elementor-clearfix' ] );

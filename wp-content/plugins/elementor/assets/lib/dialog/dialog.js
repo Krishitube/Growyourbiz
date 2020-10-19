@@ -1,5 +1,5 @@
 /*!
- * Dialogs Manager v4.8.1
+ * Dialogs Manager v4.7.1
  * https://github.com/kobizz/dialogs-manager
  *
  * Copyright Kobi Zaltzberg
@@ -252,18 +252,9 @@
 			self.hide();
 		};
 
-		var isIgnoredTarget = function(event) {
-
-			if (! settings.hide.ignore) {
-				return false;
-			}
-
-			return !! $(event.target).closest(settings.hide.ignore).length;
-		};
-
 		var hideOnOutsideClick = function(event) {
 
-			if (isContextMenuClickEvent(event) || $(event.target).closest(elements.widget).length || isIgnoredTarget(event)) {
+			if (isContextMenuClickEvent(event) || $(event.target).closest(elements.widget).length) {
 				return;
 			}
 
@@ -289,17 +280,7 @@
 			}
 
 			if (settings.closeButton) {
-				if ( settings.closeButtonClass ) {
-					//  Backwards compatibility
-					settings.closeButtonOptions.iconClass = settings.closeButtonClass;
-				}
-
-				const $button = $('<div>', settings.closeButtonOptions.attributes),
-					$buttonIcon = $('<i>', {class: settings.closeButtonOptions.iconClass});
-
-				$button.append($buttonIcon);
-
-				self.addElement('closeButton', $button);
+				self.addElement('closeButton', '<div><i class="' + settings.closeButtonClass + '"></i></div>');
 			}
 
 			var id = self.getSettings('id');
@@ -339,10 +320,7 @@
 				preventScroll: false,
 				iframe: null,
 				closeButton: false,
-				closeButtonOptions: {
-					iconClass: parentSettings.classPrefix + '-close-button-icon',
-					attributes: {},
-				},
+				closeButtonClass: parentSettings.classPrefix + '-close-button-icon',
 				position: {
 					element: 'widget',
 					my: 'center',
@@ -358,7 +336,6 @@
 					onOutsideContextMenu: false,
 					onBackgroundClick: true,
 					onEscKeyPress: true,
-					ignore: ''
 				}
 			};
 
@@ -436,18 +413,21 @@
 			}
 		};
 
-		this.addElement = function(name, element, classes) {
+		this.addElement = function(name, element, type) {
 
 			var $newElement = elements[name] = $(element || '<div>'),
-				normalizedName = normalizeClassName(name);
+				normalizedName = normalizeClassName(name),
+				className = [];
 
-			classes = classes ? classes + ' ' : '';
+			if (type) {
+				className.push(settings.classes.globalPrefix + '-' + type);
+			}
 
-			classes += settings.classes.globalPrefix + '-' + normalizedName;
+			className.push(settings.classes.globalPrefix + '-' + normalizedName);
 
-			classes += ' ' + settings.classes.prefix + '-' + normalizedName;
+			className.push(settings.classes.prefix + '-' + normalizedName);
 
-			$newElement.addClass(classes);
+			$newElement.addClass(className.join(' '));
 
 			return $newElement;
 		};
@@ -480,10 +460,6 @@
 		};
 
 		this.hide = function() {
-
-			if (! self.isVisible()) {
-				return;
-			}
 
 			clearTimeout(hideTimeOut);
 
@@ -606,7 +582,7 @@
 
 			self.getElements('header').html(message);
 
-			return self;
+			return this;
 		};
 
 		this.setMessage = function(message) {
@@ -779,13 +755,8 @@
 
 			var self = this,
 				settings = self.getSettings(),
-				buttonSettings = jQuery.extend(settings.button, options);
-
-			var classes = options.classes ? options.classes + ' ' : '';
-
-			classes += settings.classes.globalPrefix + '-button';
-
-			var $button = self.addElement(options.name, $('<' + buttonSettings.tag + '>').html(options.text), classes);
+				buttonSettings = jQuery.extend(settings.button, options),
+				$button = self.addElement(options.name, $('<' + buttonSettings.tag + '>').text(options.text), 'button');
 
 			self.buttons.push($button);
 

@@ -5,9 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
-use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
-
 /**
  * Elementor icon box widget.
  *
@@ -90,15 +87,11 @@ class Widget_Icon_Box extends Widget_Base {
 		);
 
 		$this->add_control(
-			'selected_icon',
+			'icon',
 			[
 				'label' => __( 'Icon', 'elementor' ),
-				'type' => Controls_Manager::ICONS,
-				'fa4compatibility' => 'icon',
-				'default' => [
-					'value' => 'fas fa-star',
-					'library' => 'fa-solid',
-				],
+				'type' => Controls_Manager::ICON,
+				'default' => 'fa fa-star',
 			]
 		);
 
@@ -114,6 +107,9 @@ class Widget_Icon_Box extends Widget_Base {
 				],
 				'default' => 'default',
 				'prefix_class' => 'elementor-view-',
+				'condition' => [
+					'icon!' => '',
+				],
 			]
 		);
 
@@ -129,7 +125,7 @@ class Widget_Icon_Box extends Widget_Base {
 				'default' => 'circle',
 				'condition' => [
 					'view!' => 'default',
-					'selected_icon[value]!' => '',
+					'icon!' => '',
 				],
 				'prefix_class' => 'elementor-shape-',
 			]
@@ -157,7 +153,7 @@ class Widget_Icon_Box extends Widget_Base {
 				'dynamic' => [
 					'active' => true,
 				],
-				'default' => __( 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor' ),
+				'default' => __( 'Click edit button to change this text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.', 'elementor' ),
 				'placeholder' => __( 'Enter your description', 'elementor' ),
 				'rows' => 10,
 				'separator' => 'none',
@@ -187,28 +183,21 @@ class Widget_Icon_Box extends Widget_Base {
 				'options' => [
 					'left' => [
 						'title' => __( 'Left', 'elementor' ),
-						'icon' => 'eicon-h-align-left',
+						'icon' => 'fa fa-align-left',
 					],
 					'top' => [
 						'title' => __( 'Top', 'elementor' ),
-						'icon' => 'eicon-v-align-top',
+						'icon' => 'fa fa-align-center',
 					],
 					'right' => [
 						'title' => __( 'Right', 'elementor' ),
-						'icon' => 'eicon-h-align-right',
+						'icon' => 'fa fa-align-right',
 					],
 				],
 				'prefix_class' => 'elementor-position-',
 				'toggle' => false,
-				'conditions' => [
-					'relation' => 'or',
-					'terms' => [
-						[
-							'name' => 'selected_icon[value]',
-							'operator' => '!=',
-							'value' => '',
-						],
-					],
+				'condition' => [
+					'icon!' => '',
 				],
 			]
 		);
@@ -240,15 +229,8 @@ class Widget_Icon_Box extends Widget_Base {
 			[
 				'label' => __( 'Icon', 'elementor' ),
 				'tab'   => Controls_Manager::TAB_STYLE,
-				'conditions' => [
-					'relation' => 'or',
-					'terms' => [
-						[
-							'name' => 'selected_icon[value]',
-							'operator' => '!=',
-							'value' => '',
-						],
-					],
+				'condition' => [
+					'icon!' => '',
 				],
 			]
 		);
@@ -267,13 +249,14 @@ class Widget_Icon_Box extends Widget_Base {
 			[
 				'label' => __( 'Primary Color', 'elementor' ),
 				'type' => Controls_Manager::COLOR,
-				'global' => [
-					'default' => Global_Colors::COLOR_PRIMARY,
+				'scheme' => [
+					'type' => Scheme_Color::get_type(),
+					'value' => Scheme_Color::COLOR_1,
 				],
 				'default' => '',
 				'selectors' => [
 					'{{WRAPPER}}.elementor-view-stacked .elementor-icon' => 'background-color: {{VALUE}};',
-					'{{WRAPPER}}.elementor-view-framed .elementor-icon, {{WRAPPER}}.elementor-view-default .elementor-icon' => 'fill: {{VALUE}}; color: {{VALUE}}; border-color: {{VALUE}};',
+					'{{WRAPPER}}.elementor-view-framed .elementor-icon, {{WRAPPER}}.elementor-view-default .elementor-icon' => 'color: {{VALUE}}; border-color: {{VALUE}};',
 				],
 			]
 		);
@@ -289,7 +272,7 @@ class Widget_Icon_Box extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}}.elementor-view-framed .elementor-icon' => 'background-color: {{VALUE}};',
-					'{{WRAPPER}}.elementor-view-stacked .elementor-icon' => 'fill: {{VALUE}}; color: {{VALUE}};',
+					'{{WRAPPER}}.elementor-view-stacked .elementor-icon' => 'color: {{VALUE}};',
 				],
 			]
 		);
@@ -311,7 +294,7 @@ class Widget_Icon_Box extends Widget_Base {
 				'default' => '',
 				'selectors' => [
 					'{{WRAPPER}}.elementor-view-stacked .elementor-icon:hover' => 'background-color: {{VALUE}};',
-					'{{WRAPPER}}.elementor-view-framed .elementor-icon:hover, {{WRAPPER}}.elementor-view-default .elementor-icon:hover' => 'fill: {{VALUE}}; color: {{VALUE}}; border-color: {{VALUE}};',
+					'{{WRAPPER}}.elementor-view-framed .elementor-icon:hover, {{WRAPPER}}.elementor-view-default .elementor-icon:hover' => 'color: {{VALUE}}; border-color: {{VALUE}};',
 				],
 			]
 		);
@@ -327,7 +310,7 @@ class Widget_Icon_Box extends Widget_Base {
 				],
 				'selectors' => [
 					'{{WRAPPER}}.elementor-view-framed .elementor-icon:hover' => 'background-color: {{VALUE}};',
-					'{{WRAPPER}}.elementor-view-stacked .elementor-icon:hover' => 'fill: {{VALUE}}; color: {{VALUE}};',
+					'{{WRAPPER}}.elementor-view-stacked .elementor-icon:hover' => 'color: {{VALUE}};',
 				],
 			]
 		);
@@ -466,19 +449,19 @@ class Widget_Icon_Box extends Widget_Base {
 				'options' => [
 					'left' => [
 						'title' => __( 'Left', 'elementor' ),
-						'icon' => 'eicon-text-align-left',
+						'icon' => 'fa fa-align-left',
 					],
 					'center' => [
 						'title' => __( 'Center', 'elementor' ),
-						'icon' => 'eicon-text-align-center',
+						'icon' => 'fa fa-align-center',
 					],
 					'right' => [
 						'title' => __( 'Right', 'elementor' ),
-						'icon' => 'eicon-text-align-right',
+						'icon' => 'fa fa-align-right',
 					],
 					'justify' => [
 						'title' => __( 'Justified', 'elementor' ),
-						'icon' => 'eicon-text-align-justify',
+						'icon' => 'fa fa-align-justify',
 					],
 				],
 				'selectors' => [
@@ -537,8 +520,9 @@ class Widget_Icon_Box extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .elementor-icon-box-content .elementor-icon-box-title' => 'color: {{VALUE}};',
 				],
-				'global' => [
-					'default' => Global_Colors::COLOR_PRIMARY,
+				'scheme' => [
+					'type' => Scheme_Color::get_type(),
+					'value' => Scheme_Color::COLOR_1,
 				],
 			]
 		);
@@ -547,10 +531,8 @@ class Widget_Icon_Box extends Widget_Base {
 			Group_Control_Typography::get_type(),
 			[
 				'name' => 'title_typography',
-				'selector' => '{{WRAPPER}} .elementor-icon-box-content .elementor-icon-box-title, {{WRAPPER}} .elementor-icon-box-content .elementor-icon-box-title a',
-				'global' => [
-					'default' => Global_Typography::TYPOGRAPHY_PRIMARY,
-				],
+				'selector' => '{{WRAPPER}} .elementor-icon-box-content .elementor-icon-box-title',
+				'scheme' => Scheme_Typography::TYPOGRAPHY_1,
 			]
 		);
 
@@ -572,8 +554,9 @@ class Widget_Icon_Box extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .elementor-icon-box-content .elementor-icon-box-description' => 'color: {{VALUE}};',
 				],
-				'global' => [
-					'default' => Global_Colors::COLOR_TEXT,
+				'scheme' => [
+					'type' => Scheme_Color::get_type(),
+					'value' => Scheme_Color::COLOR_3,
 				],
 			]
 		);
@@ -583,9 +566,7 @@ class Widget_Icon_Box extends Widget_Base {
 			[
 				'name' => 'description_typography',
 				'selector' => '{{WRAPPER}} .elementor-icon-box-content .elementor-icon-box-description',
-				'global' => [
-					'default' => Global_Typography::TYPOGRAPHY_TEXT,
-				],
+				'scheme' => Scheme_Typography::TYPOGRAPHY_3,
 			]
 		);
 
@@ -606,18 +587,19 @@ class Widget_Icon_Box extends Widget_Base {
 		$this->add_render_attribute( 'icon', 'class', [ 'elementor-icon', 'elementor-animation-' . $settings['hover_animation'] ] );
 
 		$icon_tag = 'span';
-
-		if ( ! isset( $settings['icon'] ) && ! Icons_Manager::is_migration_allowed() ) {
-			// add old default
-			$settings['icon'] = 'fa fa-star';
-		}
-
 		$has_icon = ! empty( $settings['icon'] );
 
 		if ( ! empty( $settings['link']['url'] ) ) {
+			$this->add_render_attribute( 'link', 'href', $settings['link']['url'] );
 			$icon_tag = 'a';
 
-			$this->add_link_attributes( 'link', $settings['link'] );
+			if ( $settings['link']['is_external'] ) {
+				$this->add_render_attribute( 'link', 'target', '_blank' );
+			}
+
+			if ( $settings['link']['nofollow'] ) {
+				$this->add_render_attribute( 'link', 'rel', 'nofollow' );
+			}
 		}
 
 		if ( $has_icon ) {
@@ -632,23 +614,12 @@ class Widget_Icon_Box extends Widget_Base {
 
 		$this->add_inline_editing_attributes( 'title_text', 'none' );
 		$this->add_inline_editing_attributes( 'description_text' );
-		if ( ! $has_icon && ! empty( $settings['selected_icon']['value'] ) ) {
-			$has_icon = true;
-		}
-		$migrated = isset( $settings['__fa4_migrated']['selected_icon'] );
-		$is_new = ! isset( $settings['icon'] ) && Icons_Manager::is_migration_allowed();
 		?>
 		<div class="elementor-icon-box-wrapper">
-			<?php if ( $has_icon ) : ?>
+		<?php if ( $has_icon ) : ?>
 			<div class="elementor-icon-box-icon">
 				<<?php echo implode( ' ', [ $icon_tag, $icon_attributes, $link_attributes ] ); ?>>
-				<?php
-				if ( $is_new || $migrated ) {
-					Icons_Manager::render_icon( $settings['selected_icon'], [ 'aria-hidden' => 'true' ] );
-				} elseif ( ! empty( $settings['icon'] ) ) {
-					?><i <?php echo $this->get_render_attribute_string( 'i' ); ?>></i><?php
-				}
-				?>
+				<i <?php echo $this->get_render_attribute_string( 'i' ); ?>></i>
 				</<?php echo $icon_tag; ?>>
 			</div>
 			<?php endif; ?>
@@ -656,9 +627,7 @@ class Widget_Icon_Box extends Widget_Base {
 				<<?php echo $settings['title_size']; ?> class="elementor-icon-box-title">
 					<<?php echo implode( ' ', [ $icon_tag, $link_attributes ] ); ?><?php echo $this->get_render_attribute_string( 'title_text' ); ?>><?php echo $settings['title_text']; ?></<?php echo $icon_tag; ?>>
 				</<?php echo $settings['title_size']; ?>>
-				<?php if ( ! Utils::is_empty( $settings['description_text'] ) ) : ?>
 				<p <?php echo $this->get_render_attribute_string( 'description_text' ); ?>><?php echo $settings['description_text']; ?></p>
-				<?php endif; ?>
 			</div>
 		</div>
 		<?php
@@ -669,16 +638,14 @@ class Widget_Icon_Box extends Widget_Base {
 	 *
 	 * Written as a Backbone JavaScript template and used to generate the live preview.
 	 *
-	 * @since 2.9.0
+	 * @since 1.0.0
 	 * @access protected
 	 */
-	protected function content_template() {
+	protected function _content_template() {
 		?>
 		<#
 		var link = settings.link.url ? 'href="' + settings.link.url + '"' : '',
-			iconTag = link ? 'a' : 'span',
-			iconHTML = elementor.helpers.renderIcon( view, settings.selected_icon, { 'aria-hidden': true }, 'i' , 'object' ),
-			migrated = elementor.helpers.isIconMigrated( settings, 'selected_icon' );
+			iconTag = link ? 'a' : 'span';
 
 		view.addRenderAttribute( 'description_text', 'class', 'elementor-icon-box-description' );
 
@@ -686,30 +653,20 @@ class Widget_Icon_Box extends Widget_Base {
 		view.addInlineEditingAttributes( 'description_text' );
 		#>
 		<div class="elementor-icon-box-wrapper">
-			<# if ( settings.icon || settings.selected_icon ) { #>
+			<# if ( settings.icon ) { #>
 			<div class="elementor-icon-box-icon">
 				<{{{ iconTag + ' ' + link }}} class="elementor-icon elementor-animation-{{ settings.hover_animation }}">
-					<# if ( iconHTML && iconHTML.rendered && ( ! settings.icon || migrated ) ) { #>
-						{{{ iconHTML.value }}}
-						<# } else { #>
-							<i class="{{ settings.icon }}" aria-hidden="true"></i>
-						<# } #>
-				</{{{ iconTag }}}>
-			</div>
+				<i class="{{ settings.icon }}" aria-hidden="true"></i>
+			</{{{ iconTag }}}>
+		</div>
 			<# } #>
 			<div class="elementor-icon-box-content">
 				<{{{ settings.title_size }}} class="elementor-icon-box-title">
 					<{{{ iconTag + ' ' + link }}} {{{ view.getRenderAttributeString( 'title_text' ) }}}>{{{ settings.title_text }}}</{{{ iconTag }}}>
 				</{{{ settings.title_size }}}>
-				<# if ( settings.description_text ) { #>
 				<p {{{ view.getRenderAttributeString( 'description_text' ) }}}>{{{ settings.description_text }}}</p>
-				<# } #>
 			</div>
 		</div>
 		<?php
-	}
-
-	public function on_import( $element ) {
-		return Icons_Manager::on_import_migration( $element, 'icon', 'selected_icon', true );
 	}
 }

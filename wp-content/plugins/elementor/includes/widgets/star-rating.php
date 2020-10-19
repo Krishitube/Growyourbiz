@@ -4,10 +4,6 @@ namespace Elementor;
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
-
-use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
-use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
-
 /**
  * Elementor star rating widget.
  *
@@ -111,9 +107,6 @@ class Widget_Star_Rating extends Widget_Base {
 				'max' => 10,
 				'step' => 0.1,
 				'default' => 5,
-				'dynamic' => [
-					'active' => true,
-				],
 			]
 		);
 
@@ -138,14 +131,15 @@ class Widget_Star_Rating extends Widget_Base {
 			[
 				'label' => __( 'Unmarked Style', 'elementor' ),
 				'type' => Controls_Manager::CHOOSE,
+				'label_block' => false,
 				'options' => [
 					'solid' => [
 						'title' => __( 'Solid', 'elementor' ),
-						'icon' => 'eicon-star',
+						'icon' => 'fa fa-star',
 					],
 					'outline' => [
 						'title' => __( 'Outline', 'elementor' ),
-						'icon' => 'eicon-star-o',
+						'icon' => 'fa fa-star-o',
 					],
 				],
 				'default' => 'solid',
@@ -158,9 +152,6 @@ class Widget_Star_Rating extends Widget_Base {
 				'label' => __( 'Title', 'elementor' ),
 				'type' => Controls_Manager::TEXT,
 				'separator' => 'before',
-				'dynamic' => [
-					'active' => true,
-				],
 			]
 		);
 
@@ -172,22 +163,22 @@ class Widget_Star_Rating extends Widget_Base {
 				'options' => [
 					'left' => [
 						'title' => __( 'Left', 'elementor' ),
-						'icon' => 'eicon-text-align-left',
+						'icon' => 'fa fa-align-left',
 					],
 					'center' => [
 						'title' => __( 'Center', 'elementor' ),
-						'icon' => 'eicon-text-align-center',
+						'icon' => 'fa fa-align-center',
 					],
 					'right' => [
 						'title' => __( 'Right', 'elementor' ),
-						'icon' => 'eicon-text-align-right',
+						'icon' => 'fa fa-align-right',
 					],
 					'justify' => [
 						'title' => __( 'Justified', 'elementor' ),
-						'icon' => 'eicon-text-align-justify',
+						'icon' => 'fa fa-align-justify',
 					],
 				],
-				'prefix_class' => 'elementor-star-rating%s--align-',
+				'prefix_class' => 'elementor-star-rating--align-',
 				'selectors' => [
 					'{{WRAPPER}}' => 'text-align: {{VALUE}}',
 				],
@@ -212,8 +203,9 @@ class Widget_Star_Rating extends Widget_Base {
 			[
 				'label' => __( 'Text Color', 'elementor' ),
 				'type' => Controls_Manager::COLOR,
-				'global' => [
-					'default' => Global_Colors::COLOR_TEXT,
+				'scheme' => [
+					'type' => Scheme_Color::get_type(),
+					'value' => Scheme_Color::COLOR_3,
 				],
 				'selectors' => [
 					'{{WRAPPER}} .elementor-star-rating__title' => 'color: {{VALUE}}',
@@ -226,9 +218,7 @@ class Widget_Star_Rating extends Widget_Base {
 			[
 				'name' => 'title_typography',
 				'selector' => '{{WRAPPER}} .elementor-star-rating__title',
-				'global' => [
-					'default' => Global_Typography::TYPOGRAPHY_TEXT,
-				],
+				'scheme' => Scheme_Typography::TYPOGRAPHY_3,
 			]
 		);
 
@@ -334,22 +324,16 @@ class Widget_Star_Rating extends Widget_Base {
 	}
 
 	/**
-	 * Print the actual stars and calculate their filling.
-	 *
-	 * Rating type is float to allow stars-count to be a fraction.
-	 * Floored-rating type is int, to represent the rounded-down stars count.
-	 * In the `for` loop, the index type is float to allow comparing with the rating value.
-	 *
 	 * @since 2.3.0
 	 * @access protected
 	 */
 	protected function render_stars( $icon ) {
 		$rating_data = $this->get_rating();
-		$rating = (float) $rating_data[0];
-		$floored_rating = floor( $rating );
+		$rating = $rating_data[0];
+		$floored_rating = (int) $rating;
 		$stars_html = '';
 
-		for ( $stars = 1.0; $stars <= $rating_data[1]; $stars++ ) {
+		for ( $stars = 1; $stars <= $rating_data[1]; $stars++ ) {
 			if ( $stars <= $floored_rating ) {
 				$stars_html .= '<i class="elementor-star-full">' . $icon . '</i>';
 			} elseif ( $floored_rating + 1 === $stars && $rating !== $floored_rating ) {
@@ -370,11 +354,11 @@ class Widget_Star_Rating extends Widget_Base {
 		$settings = $this->get_settings_for_display();
 		$rating_data = $this->get_rating();
 		$textual_rating = $rating_data[0] . '/' . $rating_data[1];
-		$icon = '&#xE934;';
+		$icon = '&#61445;';
 
 		if ( 'star_fontawesome' === $settings['star_style'] ) {
 			if ( 'outline' === $settings['unmarked_star_style'] ) {
-				$icon = '&#xE933;';
+				$icon = '&#61446;';
 			}
 		} elseif ( 'star_unicode' === $settings['star_style'] ) {
 			$icon = '&#9733;';
@@ -397,7 +381,7 @@ class Widget_Star_Rating extends Widget_Base {
 		?>
 
 		<div class="elementor-star-rating__wrapper">
-			<?php if ( ! Utils::is_empty( $settings['title'] ) ) : ?>
+			<?php if ( ! empty( $settings['title'] ) ) : ?>
 				<div class="elementor-star-rating__title"><?php echo $settings['title']; ?></div>
 			<?php endif; ?>
 			<?php echo $stars_element; ?>
@@ -406,10 +390,10 @@ class Widget_Star_Rating extends Widget_Base {
 	}
 
 	/**
-	 * @since 2.9.0
+	 * @since 2.3.0
 	 * @access protected
 	 */
-	protected function content_template() {
+	protected function _content_template() {
 		?>
 		<#
 			var getRating = function() {
@@ -437,11 +421,11 @@ class Widget_Star_Rating extends Widget_Base {
 
 				return starsHtml;
 			},
-			icon = '&#xE934;';
+			icon = '&#61445;';
 
 			if ( 'star_fontawesome' === settings.star_style ) {
 				if ( 'outline' === settings.unmarked_star_style ) {
-					icon = '&#xE933;';
+					icon = '&#61446;';
 				}
 			} else if ( 'star_unicode' === settings.star_style ) {
 				icon = '&#9733;';

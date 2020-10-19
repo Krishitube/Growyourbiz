@@ -2,12 +2,13 @@
 namespace Elementor\TemplateLibrary;
 
 use Elementor\Core\Base\Document;
-use Elementor\Core\Editor\Editor;
 use Elementor\DB;
 use Elementor\Core\Settings\Manager as SettingsManager;
 use Elementor\Core\Settings\Page\Model;
+use Elementor\Editor;
 use Elementor\Modules\Library\Documents\Library_Document;
 use Elementor\Plugin;
+use Elementor\Settings;
 use Elementor\Utils;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -401,26 +402,23 @@ class Source_Local extends Source_Base {
 
 		if ( ! empty( $args['type'] ) ) {
 			$template_types = $args['type'];
-			unset( $args['type'] );
 		}
 
-		$defaults = [
-			'post_type' => self::CPT,
-			'post_status' => 'publish',
-			'posts_per_page' => -1,
-			'orderby' => 'title',
-			'order' => 'ASC',
-			'meta_query' => [
-				[
-					'key' => Document::TYPE_META_KEY,
-					'value' => $template_types,
+		$templates_query = new \WP_Query(
+			[
+				'post_type' => self::CPT,
+				'post_status' => 'publish',
+				'posts_per_page' => -1,
+				'orderby' => 'title',
+				'order' => 'ASC',
+				'meta_query' => [
+					[
+						'key' => Document::TYPE_META_KEY,
+						'value' => $template_types,
+					],
 				],
-			],
-		];
-
-		$query_args = wp_parse_args( $args, $defaults );
-
-		$templates_query = new \WP_Query( $query_args );
+			]
+		);
 
 		$templates = [];
 
@@ -446,44 +444,36 @@ class Source_Local extends Source_Base {
 	 * @return \WP_Error|int The ID of the saved/updated template, `WP_Error` otherwise.
 	 */
 	public function save_item( $template_data ) {
+		$type = Plugin::$instance->documents->get_document_type( $template_data['type'], false );
+
+		if ( ! $type ) {
+			return new \WP_Error( 'save_error', sprintf( 'Invalid template type "%s".', $template_data['type'] ) );
+		}
+
+		// TODO: Work with the documents system.
 		if ( ! current_user_can( $this->post_type_object->cap->edit_posts ) ) {
 			return new \WP_Error( 'save_error', __( 'Access denied.', 'elementor' ) );
 		}
 
-		$defaults = [
-			'title' => __( '(no title)', 'elementor' ),
-			'page_settings' => [],
-			'status' => current_user_can( 'publish_posts' ) ? 'publish' : 'pending',
-		];
-
-		$template_data = wp_parse_args( $template_data, $defaults );
-
-		$document = Plugin::$instance->documents->create(
-			$template_data['type'],
-			[
-				'post_title' => $template_data['title'],
-				'post_status' => $template_data['status'],
-				'post_type' => self::CPT,
-			]
-		);
-
-		if ( is_wp_error( $document ) ) {
-			/**
-			 * @var \WP_Error $document
-			 */
-			return $document;
-		}
-
-		if ( ! empty( $template_data['content'] ) ) {
-			$template_data['content'] = $this->replace_elements_ids( $template_data['content'] );
-		}
-
-		$document->save( [
-			'elements' => $template_data['content'],
-			'settings' => $template_data['page_settings'],
+		$template_id = wp_insert_post( [
+			'post_title' => ! empty( $template_data['title'] ) ? $template_data['title'] : __( '(no title)', 'elementor' ),
+			'post_status' => current_user_can( 'publish_posts' ) ? 'publish' : 'pending',
+			'post_type' => self::CPT,
 		] );
 
-		$template_id = $document->get_main_id();
+		if ( is_wp_error( $template_id ) ) {
+			return $template_id;
+		}
+
+		Plugin::$instance->db->set_is_elementor_page( $template_id );
+
+		Plugin::$instance->db->save_editor( $template_id, $template_data['content'] );
+
+		$this->save_item_type( $template_id, $template_data['type'] );
+
+		if ( ! empty( $template_data['page_settings'] ) ) {
+			SettingsManager::get_settings_managers( 'page' )->save_settings( $template_data['page_settings'], $template_id );
+		}
 
 		/**
 		 * After template library save.
@@ -529,15 +519,7 @@ class Source_Local extends Source_Base {
 			return new \WP_Error( 'save_error', __( 'Access denied.', 'elementor' ) );
 		}
 
-		$document = Plugin::$instance->documents->get( $new_data['id'] );
-
-		if ( ! $document ) {
-			return new \WP_Error( 'save_error', __( 'Template not exist.', 'elementor' ) );
-		}
-
-		$document->save( [
-			'elements' => $new_data['content'],
-		] );
+		Plugin::$instance->db->save_editor( $new_data['id'], $new_data['content'] );
 
 		/**
 		 * After template library update.
@@ -585,9 +567,7 @@ class Source_Local extends Source_Base {
 			'thumbnail' => get_the_post_thumbnail_url( $post ),
 			'date' => $date,
 			'human_date' => date_i18n( get_option( 'date_format' ), $date ),
-			'human_modified_date' => date_i18n( get_option( 'date_format' ), strtotime( $post->post_modified ) ),
 			'author' => $user->display_name,
-			'status' => $post->post_status,
 			'hasPageSettings' => ! empty( $page_settings ),
 			'tags' => [],
 			'export_link' => $this->get_export_link( $template_id ),
@@ -630,8 +610,7 @@ class Source_Local extends Source_Base {
 		if ( ! empty( $args['display'] ) ) {
 			$content = $db->get_builder( $template_id );
 		} else {
-			$document = Plugin::$instance->documents->get( $template_id );
-			$content = $document ? $document->get_elements_data() : [];
+			$content = $db->get_plain_editor( $template_id );
 		}
 
 		if ( ! empty( $content ) ) {
@@ -642,7 +621,7 @@ class Source_Local extends Source_Base {
 			'content' => $content,
 		];
 
-		if ( ! empty( $args['with_page_settings'] ) ) {
+		if ( ! empty( $args['page_settings'] ) ) {
 			$page = SettingsManager::get_settings_managers( 'page' )->get_model( $args['template_id'] );
 
 			$data['page_settings'] = $page->get_data( 'settings' );
@@ -753,7 +732,7 @@ class Source_Local extends Source_Base {
 		}
 
 		// Create temporary .zip file
-		$zip_archive_filename = 'elementor-templates-' . gmdate( 'Y-m-d' ) . '.zip';
+		$zip_archive_filename = 'elementor-templates-' . date( 'Y-m-d' ) . '.zip';
 
 		$zip_archive = new \ZipArchive();
 
@@ -780,44 +759,6 @@ class Source_Local extends Source_Base {
 		unlink( $zip_complete_path );
 
 		die;
-	}
-
-	/**
-	 * Find temporary files.
-	 *
-	 * Recursively finds a list of temporary files from the extracted zip file.
-	 *
-	 * Example return data:
-	 *
-	 * [
-	 *  0 => '/www/wp-content/uploads/elementor/tmp/5eb3a7a411d44/templates/block-2-col-marble-title.json',
-	 *  1 => '/www/wp-content/uploads/elementor/tmp/5eb3a7a411d44/templates/block-2-col-text-and-photo.json',
-	 * ]
-	 *
-	 * @since 2.9.8
-	 * @access private
-	 *
-	 * @param string $temp_path - The temporary file path to scan for template files
-	 *
-	 * @return array An array of temporary files on the filesystem
-	 */
-	private function find_temp_files( $temp_path ) {
-
-		$file_names = [];
-
-		$possible_file_names = array_diff( scandir( $temp_path ), [ '.', '..' ] );
-
-		// Find nested files in the unzipped path. This happens for example when the user imports a Template Kit.
-		foreach ( $possible_file_names as $possible_file_name ) {
-			$full_possible_file_name = $temp_path . '/' . $possible_file_name;
-			if ( is_dir( $full_possible_file_name ) ) {
-				$file_names = $file_names + $this->find_temp_files( $full_possible_file_name );
-			} else {
-				$file_names[] = $full_possible_file_name;
-			}
-		}
-
-		return $file_names;
 	}
 
 	/**
@@ -855,27 +796,15 @@ class Source_Local extends Source_Base {
 
 			$zip->open( $path );
 
-			$valid_entries = [];
-
-			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
-			for ( $i = 0; $i < $zip->numFiles; $i++ ) {
-				$zipped_file_name = $zip->getNameIndex( $i );
-				$zipped_extension = pathinfo( $zipped_file_name, PATHINFO_EXTENSION );
-				// Template Kit zip files contain a `manifest.json` file, this is not a valid Elementor template so ensure we skip it.
-				if ( 'json' === $zipped_extension && 'manifest.json' !== $zipped_file_name ) {
-					$valid_entries[] = $zipped_file_name;
-				}
-			}
-
-			if ( ! empty( $valid_entries ) ) {
-				$zip->extractTo( $temp_path, $valid_entries );
-			}
+			$zip->extractTo( $temp_path );
 
 			$zip->close();
 
-			$file_names = $this->find_temp_files( $temp_path );
+			$file_names = array_diff( scandir( $temp_path ), [ '.', '..' ] );
 
-			foreach ( $file_names as $full_file_name ) {
+			foreach ( $file_names as $file_name ) {
+				$full_file_name = $temp_path . '/' . $file_name;
+
 				$import_result = $this->import_single_template( $full_file_name );
 
 				unlink( $full_file_name );
@@ -1270,12 +1199,6 @@ class Source_Local extends Source_Base {
 
 		$current_type = get_query_var( 'elementor_library_type' );
 
-		$document_types = Plugin::instance()->documents->get_document_types();
-
-		if ( empty( $document_types[ $current_type ] ) ) {
-			return;
-		}
-
 		// TODO: Better way to exclude widget type.
 		if ( 'widget' === $current_type ) {
 			return;
@@ -1366,7 +1289,7 @@ class Source_Local extends Source_Base {
 		$content = $data['content'];
 
 		if ( ! is_array( $content ) ) {
-			return new \WP_Error( 'file_error', 'Invalid Content In File' );
+			return new \WP_Error( 'file_error', 'Invalid File' );
 		}
 
 		$content = $this->process_export_import_content( $content, 'on_import' );
@@ -1442,7 +1365,7 @@ class Source_Local extends Source_Base {
 		$export_data += $template_data;
 
 		return [
-			'name' => 'elementor-' . $template_id . '-' . gmdate( 'Y-m-d' ) . '.json',
+			'name' => 'elementor-' . $template_id . '-' . date( 'Y-m-d' ) . '.json',
 			'content' => wp_json_encode( $export_data ),
 		];
 	}
@@ -1612,7 +1535,7 @@ class Source_Local extends Source_Base {
 		return $posts_columns;
 	}
 
-	public function get_current_tab_group( $default = '' ) {
+	private function get_current_tab_group( $default = '' ) {
 		$current_tabs_group = $default;
 
 		if ( ! empty( $_REQUEST[ self::TAXONOMY_TYPE_SLUG ] ) ) {

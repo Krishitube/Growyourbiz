@@ -218,7 +218,7 @@ class Widget_Video extends Widget_Base {
 				'label' => __( 'URL', 'elementor' ),
 				'type' => Controls_Manager::URL,
 				'autocomplete' => false,
-				'options' => false,
+				'show_external' => false,
 				'label_block' => true,
 				'show_label' => false,
 				'dynamic' => [
@@ -276,17 +276,6 @@ class Widget_Video extends Widget_Base {
 			[
 				'label' => __( 'Autoplay', 'elementor' ),
 				'type' => Controls_Manager::SWITCHER,
-			]
-		);
-
-		$this->add_control(
-			'play_on_mobile',
-			[
-				'label' => __( 'Play On Mobile', 'elementor' ),
-				'type' => Controls_Manager::SWITCHER,
-				'condition' => [
-					'autoplay' => 'yes',
-				],
 			]
 		);
 
@@ -363,6 +352,18 @@ class Widget_Video extends Widget_Base {
 			]
 		);
 
+		$this->add_control(
+			'color',
+			[
+				'label' => __( 'Controls Color', 'elementor' ),
+				'type' => Controls_Manager::COLOR,
+				'default' => '',
+				'condition' => [
+					'video_type' => [ 'vimeo', 'dailymotion' ],
+				],
+			]
+		);
+
 		// YouTube.
 		$this->add_control(
 			'yt_privacy',
@@ -430,18 +431,6 @@ class Widget_Video extends Widget_Base {
 				'default' => 'yes',
 				'condition' => [
 					'video_type' => 'vimeo',
-				],
-			]
-		);
-
-		$this->add_control(
-			'color',
-			[
-				'label' => __( 'Controls Color', 'elementor' ),
-				'type' => Controls_Manager::COLOR,
-				'default' => '',
-				'condition' => [
-					'video_type' => [ 'vimeo', 'dailymotion' ],
 				],
 			]
 		);
@@ -589,7 +578,6 @@ class Widget_Video extends Widget_Base {
 					'43' => '4:3',
 					'32' => '3:2',
 					'11' => '1:1',
-					'916' => '9:16',
 				],
 				'default' => '169',
 				'prefix_class' => 'elementor-aspect-ratio-',
@@ -730,7 +718,7 @@ class Widget_Video extends Widget_Base {
 				],
 				'range' => [
 					'%' => [
-						'min' => 30,
+						'min' => 50,
 					],
 				],
 				'selectors' => [
@@ -802,14 +790,7 @@ class Widget_Video extends Widget_Base {
 
 			$embed_options = $this->get_embed_options();
 
-			$is_static_render_mode = Plugin::$instance->frontend->is_static_render_mode();
-			$post_id = get_queried_object_id();
-
-			if ( $is_static_render_mode ) {
-				$video_html = Embed::get_embed_thumbnail_html( $video_url, $post_id );
-			} else {
-				$video_html = Embed::get_embed_html( $video_url, $embed_params, $embed_options );
-			}
+			$video_html = Embed::get_embed_html( $video_url, $embed_params, $embed_options );
 		}
 
 		if ( empty( $video_html ) ) {
@@ -926,10 +907,6 @@ class Widget_Video extends Widget_Base {
 
 		if ( $settings['autoplay'] && ! $this->has_image_overlay() ) {
 			$params['autoplay'] = '1';
-
-			if ( $settings['play_on_mobile'] ) {
-				$params['playsinline'] = '1';
-			}
 		}
 
 		$params_dictionary = [];
@@ -1049,10 +1026,6 @@ class Widget_Video extends Widget_Base {
 
 		if ( $settings['mute'] ) {
 			$video_params['muted'] = 'muted';
-		}
-
-		if ( $settings['play_on_mobile'] ) {
-			$video_params['playsinline'] = '';
 		}
 
 		if ( ! $settings['download_button'] ) {

@@ -1,4 +1,4 @@
-/*! elementor - v3.0.11 - 30-09-2020 */
+/*! elementor - v2.5.1 - 04-03-2019 */
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -82,102 +82,126 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 746);
+/******/ 	return __webpack_require__(__webpack_require__.s = 178);
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ 746:
+/***/ 178:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var NewTemplateLayout = __webpack_require__(747);
+var NewTemplateLayout = __webpack_require__(179);
 
 var NewTemplateModule = elementorModules.ViewModule.extend({
-  getDefaultSettings: function getDefaultSettings() {
-    return {
-      selectors: {
-        addButton: '.page-title-action:first, #elementor-template-library-add-new'
-      }
-    };
-  },
-  getDefaultElements: function getDefaultElements() {
-    var selectors = this.getSettings('selectors');
-    return {
-      $addButton: jQuery(selectors.addButton)
-    };
-  },
-  bindEvents: function bindEvents() {
-    this.elements.$addButton.on('click', this.onAddButtonClick);
-    elementorCommon.elements.$window.on('hashchange', this.showModalByHash.bind(this));
-  },
-  showModalByHash: function showModalByHash() {
-    if ('#add_new' === location.hash) {
-      this.layout.showModal();
-      location.hash = '';
-    }
-  },
-  onInit: function onInit() {
-    elementorModules.ViewModule.prototype.onInit.apply(this, arguments);
-    this.layout = new NewTemplateLayout();
-    this.showModalByHash();
-  },
-  onAddButtonClick: function onAddButtonClick(event) {
-    event.preventDefault();
-    this.layout.showModal();
-  }
+
+	getDefaultSettings: function getDefaultSettings() {
+		return {
+			selectors: {
+				addButton: '.page-title-action:first, #elementor-template-library-add-new'
+			}
+		};
+	},
+
+	getDefaultElements: function getDefaultElements() {
+		var selectors = this.getSettings('selectors');
+
+		return {
+			$addButton: jQuery(selectors.addButton)
+		};
+	},
+
+	bindEvents: function bindEvents() {
+		this.elements.$addButton.on('click', this.onAddButtonClick);
+
+		elementorCommon.elements.$window.on('hashchange', this.showModalByHash.bind(this));
+	},
+
+	showModalByHash: function showModalByHash() {
+		if ('#add_new' === location.hash) {
+			this.layout.showModal();
+
+			location.hash = '';
+		}
+	},
+
+	onInit: function onInit() {
+		elementorModules.ViewModule.prototype.onInit.apply(this, arguments);
+
+		this.layout = new NewTemplateLayout();
+
+		this.showModalByHash();
+	},
+
+	onAddButtonClick: function onAddButtonClick(event) {
+		event.preventDefault();
+
+		this.layout.showModal();
+	}
 });
+
 jQuery(function () {
-  window.elementorNewTemplate = new NewTemplateModule();
+	window.elementorNewTemplate = new NewTemplateModule();
 });
 
 /***/ }),
 
-/***/ 747:
+/***/ 179:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var NewTemplateView = __webpack_require__(748);
+var NewTemplateView = __webpack_require__(180);
 
 module.exports = elementorModules.common.views.modal.Layout.extend({
-  getModalOptions: function getModalOptions() {
-    return {
-      id: 'elementor-new-template-modal'
-    };
-  },
-  getLogoOptions: function getLogoOptions() {
-    return {
-      title: elementorAdmin.translate('new_template')
-    };
-  },
-  initialize: function initialize() {
-    elementorModules.common.views.modal.Layout.prototype.initialize.apply(this, arguments);
-    this.showLogo();
-    this.showContentView();
-  },
-  showContentView: function showContentView() {
-    this.modalContent.show(new NewTemplateView());
-  }
+
+	getModalOptions: function getModalOptions() {
+		return {
+			id: 'elementor-new-template-modal'
+		};
+	},
+
+	getLogoOptions: function getLogoOptions() {
+		return {
+			title: elementorAdmin.translate('new_template')
+		};
+	},
+
+	initialize: function initialize() {
+		elementorModules.common.views.modal.Layout.prototype.initialize.apply(this, arguments);
+
+		this.showLogo();
+
+		this.showContentView();
+	},
+
+	showContentView: function showContentView() {
+		this.modalContent.show(new NewTemplateView());
+	}
 });
 
 /***/ }),
 
-/***/ 748:
+/***/ 180:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 module.exports = Marionette.ItemView.extend({
-  id: 'elementor-new-template-dialog-content',
-  template: '#tmpl-elementor-new-template',
-  ui: {},
-  events: {},
-  onRender: function onRender() {}
+
+	id: 'elementor-new-template-dialog-content',
+
+	template: '#tmpl-elementor-new-template',
+
+	ui: {},
+
+	events: {},
+
+	onRender: function onRender() {}
 });
 
 /***/ })

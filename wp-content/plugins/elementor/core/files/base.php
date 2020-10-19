@@ -1,7 +1,6 @@
 <?php
-namespace Elementor\Core\Files;
 
-use Elementor\Plugin;
+namespace Elementor\Core\Files;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -63,15 +62,6 @@ abstract class Base {
 		$wp_upload_dir = self::get_wp_uploads_dir();
 
 		return $wp_upload_dir['baseurl'] . '/' . self::UPLOADS_DIR;
-	}
-
-	/**
-	 * Use a create function for PhpDoc (@return static).
-	 *
-	 * @return static
-	 */
-	public static function create() {
-		return Plugin::$instance->files_manager->get( get_called_class(), func_get_args() );
 	}
 
 	/**
@@ -210,7 +200,9 @@ abstract class Base {
 	 *                    the property does not exist.
 	 */
 	public function get_meta( $property = null ) {
-		$meta = array_merge( $this->get_default_meta(), (array) $this->load_meta() );
+		$default_meta = $this->get_default_meta();
+
+		$meta = array_merge( $default_meta, (array) $this->load_meta() );
 
 		if ( $property ) {
 			return isset( $meta[ $property ] ) ? $meta[ $property ] : null;

@@ -40,29 +40,6 @@ class Manager {
 	}
 
 	/**
-	 * Localize settings.
-	 *
-	 * Add new localized settings for the dynamic module.
-	 *
-	 * Fired by `elementor/editor/localize_settings` filter.
-	 *
-	 * @access public
-	 *
-	 * @param array $settings Localized settings.
-	 *
-	 * @return array Localized settings.
-	 */
-	public function localize_settings( $settings ) {
-		$settings = array_replace_recursive( $settings, [
-			'i18n' => [
-				'dynamic' => __( 'Dynamic', 'elementor' ),
-			],
-		] );
-
-		return $settings;
-	}
-
-	/**
 	 * Parse dynamic tags text.
 	 *
 	 * Receives the dynamic tag text, and returns a single value or multiple values
@@ -433,7 +410,15 @@ class Manager {
 	 * @param Post $css_file
 	 */
 	public function after_enqueue_post_css( $css_file ) {
-		$css_file = Dynamic_CSS::create( $css_file->get_post_id(), $css_file );
+		$post_id = $css_file->get_post_id();
+
+		if ( $css_file instanceof Post_Preview ) {
+			$post_id_for_data = $css_file->get_preview_id();
+		} else {
+			$post_id_for_data = $post_id;
+		}
+
+		$css_file = new Dynamic_CSS( $post_id, $post_id_for_data );
 
 		$css_file->enqueue();
 	}
@@ -453,6 +438,5 @@ class Manager {
 	private function add_actions() {
 		add_action( 'elementor/ajax/register_actions', [ $this, 'register_ajax_actions' ] );
 		add_action( 'elementor/css-file/post/enqueue', [ $this, 'after_enqueue_post_css' ] );
-		add_filter( 'elementor/editor/localize_settings', [ $this, 'localize_settings' ] );
 	}
 }

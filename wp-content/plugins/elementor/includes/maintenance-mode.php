@@ -144,7 +144,7 @@ class Maintenance_Mode {
 		}
 
 		// Setup global post for Elementor\frontend so `_has_elementor_in_page = true`.
-		$GLOBALS['post'] = get_post( self::get( 'template_id' ) ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		$GLOBALS['post'] = get_post( self::get( 'template_id' ) ); // WPCS: override ok.
 
 		// Set the template as `$wp_query->current_object` for `wp_title` and etc.
 		query_posts( [
@@ -176,7 +176,7 @@ class Maintenance_Mode {
 		$templates_options = [];
 
 		foreach ( $templates as $template ) {
-			$templates_options[ $template['template_id'] ] = esc_html( $template['title'] );
+			$templates_options[ $template['template_id'] ] = $template['title'];
 		}
 
 		ob_start();
@@ -191,7 +191,6 @@ class Maintenance_Mode {
 				'sections' => [
 					'maintenance_mode' => [
 						'callback' => function() {
-							echo '<h2>' . esc_html__( 'Maintenance Mode', 'elementor' ) . '</h2>';
 							echo '<div>' . __( 'Set your entire website as MAINTENANCE MODE, meaning the site is offline temporarily for maintenance, or set it as COMING SOON mode, meaning the site is offline until it is ready to be launched.', 'elementor' ) . '</div>';
 						},
 						'fields' => [
@@ -271,13 +270,11 @@ class Maintenance_Mode {
 			'href' => Tools::get_url() . '#tab-maintenance_mode',
 		] );
 
-		$document = Plugin::$instance->documents->get( self::get( 'template_id' ) );
-
 		$wp_admin_bar->add_node( [
 			'id' => 'elementor-maintenance-edit',
 			'parent' => 'elementor-maintenance-on',
 			'title' => __( 'Edit Template', 'elementor' ),
-			'href' => $document ? $document->get_edit_url() : '',
+			'href' => Utils::get_edit_link( self::get( 'template_id' ) ),
 		] );
 	}
 
@@ -299,12 +296,6 @@ class Maintenance_Mode {
 		<?php
 	}
 
-	public function on_update_mode( $old_value, $value ) {
-		if ( $old_value !== $value ) {
-			do_action( 'elementor/maintenance_mode/mode_changed', $old_value, $value );
-		}
-	}
-
 	/**
 	 * Maintenance mode constructor.
 	 *
@@ -314,8 +305,6 @@ class Maintenance_Mode {
 	 * @access public
 	 */
 	public function __construct() {
-		add_action( 'update_option_elementor_maintenance_mode_mode', [ $this, 'on_update_mode' ], 10, 2 );
-
 		$is_enabled = (bool) self::get( 'mode' ) && (bool) self::get( 'template_id' );
 
 		if ( is_admin() ) {

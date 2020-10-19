@@ -31,20 +31,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Safe_Mode {
 
 	const OPTION_ENABLED = 'elementor_safe_mode';
-	const OPTION_TOKEN = self::OPTION_ENABLED . '_token';
 
 	public function is_enabled() {
 		return get_option( self::OPTION_ENABLED );
-	}
-
-	public function is_valid_token() {
-		$token = isset( $_COOKIE[ self::OPTION_TOKEN ] ) ? $_COOKIE[ self::OPTION_TOKEN ] : null;
-
-		if ( $token && get_option( self::OPTION_TOKEN ) === $token ) {
-			return true;
-		}
-
-		return false;
 	}
 
 	public function is_requested() {
@@ -57,10 +46,6 @@ class Safe_Mode {
 
 	public function is_editor_preview() {
 		return isset( $_GET['elementor-preview'] );
-	}
-
-	public function is_editor_ajax() {
-		return is_admin() && isset( $_POST['action'] ) && 'elementor_ajax' === $_POST['action'];
 	}
 
 	public function add_hooks() {
@@ -114,7 +99,7 @@ class Safe_Mode {
 
 		$enabled_type = $this->is_enabled();
 
-		if ( ! $enabled_type || ! $this->is_valid_token() ) {
+		if ( ! $enabled_type ) {
 			return;
 		}
 
@@ -122,7 +107,7 @@ class Safe_Mode {
 			return;
 		}
 
-		if ( ! $this->is_editor() && ! $this->is_editor_preview() && ! $this->is_editor_ajax() ) {
+		if ( ! $this->is_editor() && ! $this->is_editor_preview() ) {
 			return;
 		}
 

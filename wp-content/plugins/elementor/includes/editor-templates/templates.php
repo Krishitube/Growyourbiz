@@ -21,14 +21,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 </script>
 
 <script type="text/template" id="tmpl-elementor-template-library-header-menu">
-	<# jQuery.each( tabs, ( tab, args ) => { #>
-		<div class="elementor-component-tab elementor-template-library-menu-item" data-tab="{{{ tab }}}">{{{ args.title }}}</div>
+	<# screens.forEach( ( screen ) => { #>
+		<div class="elementor-template-library-menu-item" data-template-source="{{{ screen.source }}}"{{{ screen.type ? ' data-template-type="' + screen.type + '"' : '' }}}>{{{ screen.title }}}</div>
 	<# } ); #>
 </script>
 
 <script type="text/template" id="tmpl-elementor-template-library-header-preview">
 	<div id="elementor-template-library-header-preview-insert-wrapper" class="elementor-templates-modal__header__item">
-		{{{ elementor.templates.layout.getTemplateActionButton( obj ) }}}
+		{{{ elementor.templates.getLayout().getTemplateActionButton( obj ) }}}
 	</div>
 </script>
 
@@ -88,7 +88,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<# var checked = elementor.templates.getFilter( 'favorite' ) ? ' checked' : ''; #>
 					<input id="elementor-template-library-filter-my-favorites" type="checkbox"{{{ checked }}}>
 					<label id="elementor-template-library-filter-my-favorites-label" for="elementor-template-library-filter-my-favorites">
-						<i class="eicon" aria-hidden="true"></i>
+						<i class="fa" aria-hidden="true"></i>
 						<?php echo __( 'My Favorites', 'elementor' ); ?>
 					</label>
 				</div>
@@ -99,7 +99,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div id="elementor-template-library-filter-text-wrapper">
 			<label for="elementor-template-library-filter-text" class="elementor-screen-only"><?php echo __( 'Search Templates:', 'elementor' ); ?></label>
 			<input id="elementor-template-library-filter-text" placeholder="<?php echo esc_attr__( 'Search', 'elementor' ); ?>">
-			<i class="eicon-search"></i>
 		</div>
 	</div>
 	<# if ( 'local' === activeSource ) { #>
@@ -128,7 +127,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div id="elementor-template-library-templates-container"></div>
 	<# if ( 'remote' === activeSource ) { #>
 		<div id="elementor-template-library-footer-banner">
-			<img class="elementor-nerd-box-icon" src="<?php echo ELEMENTOR_ASSETS_URL . 'images/information.svg'; ?>" />
+			<i class="eicon-nerd" aria-hidden="true"></i>
 			<div class="elementor-excerpt"><?php echo __( 'Stay tuned! More awesome templates coming real soon.', 'elementor' ); ?></div>
 		</div>
 	<# } #>
@@ -142,16 +141,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<img src="{{ thumbnail }}">
 		<# } #>
 		<div class="elementor-template-library-template-preview">
-			<i class="eicon-zoom-in-bold" aria-hidden="true"></i>
+			<i class="fa fa-search-plus" aria-hidden="true"></i>
 		</div>
 	</div>
 	<div class="elementor-template-library-template-footer">
-		{{{ elementor.templates.layout.getTemplateActionButton( obj ) }}}
+		{{{ elementor.templates.getLayout().getTemplateActionButton( obj ) }}}
 		<div class="elementor-template-library-template-name">{{{ title }}} - {{{ type }}}</div>
 		<div class="elementor-template-library-favorite">
 			<input id="elementor-template-library-template-{{ template_id }}-favorite-input" class="elementor-template-library-template-favorite-input" type="checkbox"{{ favorite ? " checked" : "" }}>
 			<label for="elementor-template-library-template-{{ template_id }}-favorite-input" class="elementor-template-library-template-favorite-label">
-				<i class="eicon-heart-o" aria-hidden="true"></i>
+				<i class="fa fa-heart-o" aria-hidden="true"></i>
 				<span class="elementor-screen-only"><?php echo __( 'Favorite', 'elementor' ); ?></span>
 			</label>
 		</div>
@@ -165,7 +164,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="elementor-template-library-template-meta elementor-template-library-template-date elementor-template-library-local-column-4">{{{ human_date }}}</div>
 	<div class="elementor-template-library-template-controls elementor-template-library-local-column-5">
 		<div class="elementor-template-library-template-preview">
-			<i class="eicon-preview-medium" aria-hidden="true"></i>
+			<i class="fa fa-eye" aria-hidden="true"></i>
 			<span class="elementor-template-library-template-control-title"><?php echo __( 'Preview', 'elementor' ); ?></span>
 		</div>
 		<button class="elementor-template-library-template-action elementor-template-library-template-insert elementor-button elementor-button-success">
@@ -178,12 +177,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 		</div>
 		<div class="elementor-template-library-template-more">
 			<div class="elementor-template-library-template-delete">
-				<i class="eicon-trash-o" aria-hidden="true"></i>
+				<i class="fa fa-trash-o" aria-hidden="true"></i>
 				<span class="elementor-template-library-template-control-title"><?php echo __( 'Delete', 'elementor' ); ?></span>
 			</div>
 			<div class="elementor-template-library-template-export">
 				<a href="{{ export_link }}">
-					<i class="eicon-sign-out" aria-hidden="true"></i>
+					<i class="fa fa-sign-out" aria-hidden="true"></i>
 					<span class="elementor-template-library-template-control-title"><?php echo __( 'Export', 'elementor' ); ?></span>
 				</a>
 			</div>
@@ -199,8 +198,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 </script>
 
 <script type="text/template" id="tmpl-elementor-template-library-get-pro-button">
-	<a class="elementor-template-library-template-action elementor-button elementor-go-pro" href="<?php echo Utils::get_pro_link( 'https://elementor.com/pro/?utm_source=panel-library&utm_campaign=gopro&utm_medium=wp-dash' ); ?>" target="_blank">
-		<i class="eicon-external-link-square" aria-hidden="true"></i>
+	<a class="elementor-template-library-template-action elementor-button elementor-button-go-pro" href="<?php echo Utils::get_pro_link( 'https://elementor.com/pro/?utm_source=panel-library&utm_campaign=gopro&utm_medium=wp-dash' ); ?>" target="_blank">
+		<i class="fa fa-external-link-square" aria-hidden="true"></i>
 		<span class="elementor-button-title"><?php echo __( 'Go Pro', 'elementor' ); ?></span>
 	</a>
 </script>
@@ -217,7 +216,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<input id="elementor-template-library-save-template-name" name="title" placeholder="<?php echo esc_attr__( 'Enter Template Name', 'elementor' ); ?>" required>
 		<button id="elementor-template-library-save-template-submit" class="elementor-button elementor-button-success">
 			<span class="elementor-state-icon">
-				<i class="eicon-loading eicon-animation-spin" aria-hidden="true"></i>
+				<i class="fa fa-spin fa-circle-o-notch" aria-hidden="true"></i>
 			</span>
 			<?php echo __( 'Save', 'elementor' ); ?>
 		</button>
@@ -247,7 +246,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <script type="text/template" id="tmpl-elementor-template-library-templates-empty">
 	<div class="elementor-template-library-blank-icon">
-		<img src="<?php echo ELEMENTOR_ASSETS_URL . 'images/no-search-results.svg'; ?>" class="elementor-template-library-no-results" />
+		<i class="eicon-nerd" aria-hidden="true"></i>
 	</div>
 	<div class="elementor-template-library-blank-title"></div>
 	<div class="elementor-template-library-blank-message"></div>
@@ -259,28 +258,4 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <script type="text/template" id="tmpl-elementor-template-library-preview">
 	<iframe></iframe>
-</script>
-
-<script type="text/template" id="tmpl-elementor-template-library-connect">
-	<div id="elementor-template-library-connect-logo" class="e-logo-wrapper">
-		<i class="eicon-elementor" aria-hidden="true"></i>
-	</div>
-	<div class="elementor-template-library-blank-title">
-		{{{ title }}}
-	</div>
-	<div class="elementor-template-library-blank-message">
-		{{{ message }}}
-	</div>
-	<?php $url = Plugin::$instance->common->get_component( 'connect' )->get_app( 'library' )->get_admin_url( 'authorize' ); ?>
-	<a id="elementor-template-library-connect__button" class="elementor-button elementor-button-success" href="<?php echo esc_attr( $url ); ?>">
-		{{{ button }}}
-	</a>
-	<?php
-	$base_images_url = $this->get_assets_base_url() . '/assets/images/library-connect/';
-
-	$images = [ 'left-1', 'left-2', 'right-1', 'right-2' ];
-
-	foreach ( $images as $image ) : ?>
-		<img id="elementor-template-library-connect__background-image-<?php echo $image; ?>" class="elementor-template-library-connect__background-image" src="<?php echo $base_images_url . $image; ?>.png" draggable="false"/>
-	<?php endforeach; ?>
 </script>

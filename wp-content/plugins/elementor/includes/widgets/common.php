@@ -60,7 +60,6 @@ class Widget_Common extends Widget_Base {
 			]
 		);
 
-		// Element Name for the Navigator
 		$this->add_control(
 			'_title',
 			[
@@ -75,7 +74,7 @@ class Widget_Common extends Widget_Base {
 			[
 				'label' => __( 'Margin', 'elementor' ),
 				'type' => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', '%', 'rem' ],
+				'size_units' => [ 'px', '%' ],
 				'selectors' => [
 					'{{WRAPPER}} > .elementor-widget-container' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
@@ -87,14 +86,14 @@ class Widget_Common extends Widget_Base {
 			[
 				'label' => __( 'Padding', 'elementor' ),
 				'type' => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', '%', 'rem' ],
+				'size_units' => [ 'px', 'em', '%' ],
 				'selectors' => [
 					'{{WRAPPER}} > .elementor-widget-container' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
 
-		$this->add_responsive_control(
+		$this->add_control(
 			'_z_index',
 			[
 				'label' => __( 'Z-Index', 'elementor' ),
@@ -103,6 +102,7 @@ class Widget_Common extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}}' => 'z-index: {{VALUE}};',
 				],
+				'label_block' => false,
 				'separator' => 'before',
 			]
 		);
@@ -117,8 +117,8 @@ class Widget_Common extends Widget_Base {
 				],
 				'default' => '',
 				'title' => __( 'Add your custom id WITHOUT the Pound key. e.g: my-id', 'elementor' ),
+				'label_block' => false,
 				'style_transfer' => false,
-				'classes' => 'elementor-control-direction-ltr',
 			]
 		);
 
@@ -132,7 +132,6 @@ class Widget_Common extends Widget_Base {
 				],
 				'prefix_class' => '',
 				'title' => __( 'Add your custom class WITHOUT the dot. e.g: my-class', 'elementor' ),
-				'classes' => 'elementor-control-direction-ltr',
 			]
 		);
 
@@ -246,9 +245,6 @@ class Widget_Common extends Widget_Base {
 				],
 				'render_type' => 'ui',
 				'separator' => 'before',
-				'selectors' => [
-					'{{WRAPPER}} > .elementor-widget-container' => 'transition: background {{SIZE}}s',
-				],
 			]
 		);
 
@@ -367,7 +363,7 @@ class Widget_Common extends Widget_Base {
 		$this->start_controls_section(
 			'_section_position',
 			[
-				'label' => __( 'Positioning', 'elementor' ),
+				'label' => __( 'Custom Positioning', 'elementor' ),
 				'tab' => Controls_Manager::TAB_ADVANCED,
 			]
 		);
@@ -436,6 +432,7 @@ class Widget_Common extends Widget_Base {
 			[
 				'label' => __( 'Vertical Align', 'elementor' ),
 				'type' => Controls_Manager::CHOOSE,
+				'label_block' => false,
 				'options' => [
 					'flex-start' => [
 						'title' => __( 'Start', 'elementor' ),
@@ -485,7 +482,6 @@ class Widget_Common extends Widget_Base {
 					'fixed' => __( 'Fixed', 'elementor' ),
 				],
 				'prefix_class' => 'elementor-',
-				'frontend_available' => true,
 			]
 		);
 
@@ -497,6 +493,7 @@ class Widget_Common extends Widget_Base {
 			[
 				'label' => __( 'Horizontal Orientation', 'elementor' ),
 				'type' => Controls_Manager::CHOOSE,
+				'label_block' => false,
 				'toggle' => false,
 				'default' => 'start',
 				'options' => [
@@ -600,6 +597,7 @@ class Widget_Common extends Widget_Base {
 			[
 				'label' => __( 'Vertical Orientation', 'elementor' ),
 				'type' => Controls_Manager::CHOOSE,
+				'label_block' => false,
 				'toggle' => false,
 				'default' => 'start',
 				'options' => [
@@ -708,7 +706,7 @@ class Widget_Common extends Widget_Base {
 		$this->add_control(
 			'responsive_description',
 			[
-				'raw' => __( 'Responsive visibility will take effect only on preview or live page, and not while editing in Elementor.', 'elementor' ),
+				'raw' => __( 'Attention: The display settings (show/hide for mobile, tablet or desktop) will only take effect once you are on the preview or live page, and not while you\'re in editing mode in Elementor.', 'elementor' ),
 				'type' => Controls_Manager::RAW_HTML,
 				'content_classes' => 'elementor-descriptor',
 			]
@@ -754,8 +752,6 @@ class Widget_Common extends Widget_Base {
 		);
 
 		$this->end_controls_section();
-
-		Plugin::$instance->controls_manager->add_custom_attributes_controls( $this );
 
 		Plugin::$instance->controls_manager->add_custom_css_controls( $this );
 	}
